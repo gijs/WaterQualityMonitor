@@ -1,0 +1,3 @@
+[submodule "lib/DS3232RTC"]
+	path = lib/DS3232RTC
+	url = https://github.com/Tecsmith/DS3232RTC.git
