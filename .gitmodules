@@ -1,3 +1,6 @@
 [submodule "lib/DS3232RTC"]
 	path = lib/DS3232RTC
 	url = https://github.com/Tecsmith/DS3232RTC.git
+[submodule "lib/DallasTemperature"]
+	path = lib/DallasTemperature
+	url = https://github.com/milesburton/Arduino-Temperature-Control-Library.git
