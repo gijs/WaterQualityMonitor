@@ -29,8 +29,8 @@ Hardware
 Sensors
 =======
 
-* (Atlas Scientific PH Sensor)[https://www.atlas-scientific.com/product_pages/kits/ph-kit.html]
-* (Atlas Scientific Dissolved Oxygen Sensor)[https://www.atlas-scientific.com/product_pages/kits/do-kit.html]
-* (Atlas Scientific Oxygen-Reduction Potential Sensor)[https://www.atlas-scientific.com/product_pages/kits/orp-kit.html]
-* (Atlas Scientific Conductivity Sensor)(https://www.atlas-scientific.com/product_pages/kits/ec-kit.html)
-* (Maxim DS18B20 Temperature Sensor)[http://www.maximintegrated.com/datasheet/index.mvp/id/2812]
+* [Atlas Scientific PH Sensor](https://www.atlas-scientific.com/product_pages/kits/ph-kit.html)
+* [Atlas Scientific Dissolved Oxygen Sensor][https://www.atlas-scientific.com/product_pages/kits/do-kit.html)
+* [Atlas Scientific Oxygen-Reduction Potential Sensor](https://www.atlas-scientific.com/product_pages/kits/orp-kit.html)
+* [Atlas Scientific Conductivity Sensor](https://www.atlas-scientific.com/product_pages/kits/ec-kit.html)
+* [Maxim DS18B20 Temperature Sensor](http://www.maximintegrated.com/datasheet/index.mvp/id/2812)
