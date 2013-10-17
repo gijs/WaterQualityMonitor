@@ -18,3 +18,19 @@ The following libraries are pulled in as git submodules:
 * [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library)
 * [DS3232RTC](https://github.com/Tecsmith/DS3232RTC)
 
+Hardware
+========
+
+* (Arduino Mega2560)[http://arduino.cc/en/Main/arduinoBoardMega2560]
+* (Arduino Wireless SD Shield)[http://arduino.cc/en/Main/ArduinoWirelessShield]
+* (Freetronics DS3232 RealTime Clock)[http://www.freetronics.com/products/real-time-clock-rtc-module]
+* (Atlas Scientific Serial Port Connector)[https://www.atlas-scientific.com/product_pages/embedded/serial-port-connector.html]
+
+Sensors
+=======
+
+* (Atlas Scientific PH Sensor)[https://www.atlas-scientific.com/product_pages/kits/ph-kit.html]
+* (Atlas Scientific Dissolved Oxygen Sensor)[https://www.atlas-scientific.com/product_pages/kits/do-kit.html]
+* (Atlas Scientific Oxygen-Reduction Potential Sensor)[https://www.atlas-scientific.com/product_pages/kits/orp-kit.html]
+* (Atlas Scientific Conductivity Sensor)(https://www.atlas-scientific.com/product_pages/kits/ec-kit.html)
+* (Maxim DS18B20 Temperature Sensor)[http://www.maximintegrated.com/datasheet/index.mvp/id/2812]
