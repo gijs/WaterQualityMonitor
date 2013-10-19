@@ -17,43 +17,36 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef WaterQualityMonitor_H_
-#define WaterQualityMonitor_H_
+#ifndef RECORDS_H_
+#define RECORDS_H_
+
 #include "Arduino.h"
-//add your includes for the project WaterQualityMonitor here
+#include "Time.h"
 
+struct Record
+{
+	int8_t record_type;
+	int8_t id;
+	time_t time_stamp;
+	int8_t characteristic;
+	int8_t mantissa;
 
-#include "Devices.h"
-#include "Records.h"
+	void setVal(float ph);
 
-SensorPosition sensorMap[] = {
-		{0, PH},
-		{1, DO},
-		{2, ORP},
-		{3, EC},
-		{-1, SENSOR_TERMINATOR}
+	Record(): record_type(0), id(0){};
 };
 
-//end of add your includes here
-#ifdef __cplusplus
-extern "C" {
-#endif
-void loop();
-void setup();
-void downtime(char* message);
-void upload();
-void sample();
-bool do_upload();
-time_t wakeup_at();
-void INT0_ISR();
-#ifdef __cplusplus
-} // extern "C"
-#endif
+struct OneWireRecord
+{
+	int8_t record_type;
+	int8_t id[8];
+	time_t time_stamp;
+	int8_t characteristic;
+	int8_t mantissa;
 
-//add your function definitions for the project WaterQualityMonitor here
+	OneWireRecord(): record_type(1){};
 
+	void setVal(float ph);
+};
 
-
-
-//Do not add code below this line
-#endif /* WaterQualityMonitor_H_ */
+#endif /* RECORDS_H_ */

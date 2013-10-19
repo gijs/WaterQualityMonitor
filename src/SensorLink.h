@@ -17,43 +17,40 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef WaterQualityMonitor_H_
-#define WaterQualityMonitor_H_
+#ifndef SENSORLINK_H_
+#define SENSORLINK_H_
+
 #include "Arduino.h"
-//add your includes for the project WaterQualityMonitor here
 
 
-#include "Devices.h"
-#include "Records.h"
+#define MAX_PACKET_SIZE 200
 
-SensorPosition sensorMap[] = {
-		{0, PH},
-		{1, DO},
-		{2, ORP},
-		{3, EC},
-		{-1, SENSOR_TERMINATOR}
+#define SENSORLINK_SINK_PACKET 1
+#define SENSORLINK_DATA_PACKET 2
+
+
+struct SensorLinkPacket
+{
+	uint8_t  packet_type;
+	uint8_t  header_size;
 };
 
-//end of add your includes here
-#ifdef __cplusplus
-extern "C" {
-#endif
-void loop();
-void setup();
-void downtime(char* message);
-void upload();
-void sample();
-bool do_upload();
-time_t wakeup_at();
-void INT0_ISR();
-#ifdef __cplusplus
-} // extern "C"
-#endif
+struct SinkPacket: SensorLinkPacket
+{
+	uint32_t flags;
+	void init();
+};
 
-//add your function definitions for the project WaterQualityMonitor here
+struct DataPacket: SensorLinkPacket
+{
 
+	uint32_t flags;
+	uint32_t senquence;
+	uint8_t  row_size;
+	uint8_t  row_count;
+
+	void init();
+};
 
 
-
-//Do not add code below this line
-#endif /* WaterQualityMonitor_H_ */
+#endif /* SENSORLINK_H_ */

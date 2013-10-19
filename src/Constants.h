@@ -17,43 +17,26 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef WaterQualityMonitor_H_
-#define WaterQualityMonitor_H_
-#include "Arduino.h"
-//add your includes for the project WaterQualityMonitor here
+#ifndef CONSTANTS_H_
+#define CONSTANTS_H_
+
+static char colon = ':';
+static char space = ' ';
+static char slash = '/';
+static char tab = '\t';
+static char carrage_return = '\r';
+
+#define DEBUG_STREAM Serial1
+#define START_DEBUG_STREAM(baud_rate) DEBUG_STREAM.begin(baud_rate);
+#define DEBUG_LN(val) DEBUG_STREAM.println(val)
+#define DEBUG_LN_(val, fmt) DEBUG_STREAM.println(val, fmt)
+#define DEBUG(val) DEBUG_STREAM.print(val)
+#define DEBUG_(val, fmt) DEBUG_STREAM.print(val, fmt)
+
+#define _DEBUG(val) DEBUG_STREAM.print(tab);DEBUG_STREAM.print(val)
+#define _DEBUG_LN(val) DEBUG_STREAM.print(tab);DEBUG_STREAM.println(val)
+
+#define FREE_MEM DEBUG("Free Ram: ");DEBUG_LN(FreeRam())
 
 
-#include "Devices.h"
-#include "Records.h"
-
-SensorPosition sensorMap[] = {
-		{0, PH},
-		{1, DO},
-		{2, ORP},
-		{3, EC},
-		{-1, SENSOR_TERMINATOR}
-};
-
-//end of add your includes here
-#ifdef __cplusplus
-extern "C" {
-#endif
-void loop();
-void setup();
-void downtime(char* message);
-void upload();
-void sample();
-bool do_upload();
-time_t wakeup_at();
-void INT0_ISR();
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
-//add your function definitions for the project WaterQualityMonitor here
-
-
-
-
-//Do not add code below this line
-#endif /* WaterQualityMonitor_H_ */
+#endif /* CONSTANTS_H_ */

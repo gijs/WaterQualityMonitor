@@ -1,1 +1,5 @@
 .build*
+Release*
+lib/Time*
+lib/OneWire*
+lib/XBee*
