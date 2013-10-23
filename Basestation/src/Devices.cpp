@@ -17,36 +17,15 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "Records.h"
+#include "Devices.h"
 
-DoubleRecord::DoubleRecord()
-{
-	record_type = RECORD_TYPE_DOUBLE_RECORD;
-	id = 0;
-}
-void DoubleRecord::setVal(float value)
-{
-	characteristic = int(value);
-	mantissa = (value - characteristic) * 100;
-	exponent = 2;
-}
+//using namespace Devices;
 
-OneWireRecord::OneWireRecord()
-{
-	record_type = RECORD_TYPE_ONE_WIRE_RECORD;
-	for(int i = 0; i < 8; i++)
-	{
-		id[i] = 0;
-	}
-}
+Stream* Devices::xbee_stream;
+Stream* Devices::debug_stream;
 
-void OneWireRecord::setVal(float value)
+uint64_t Devices::initilize_devices(int sd_cs_pin, Stream* xbee_stream, Stream* debug_stream)
 {
-	characteristic = int(value);
-	mantissa = (value - characteristic) * 100;
-}
-
-SalinityRecord::SalinityRecord() {
-	record_type = SALINITY_RECORD;
-	id = 0;
+	Devices::xbee_stream = xbee_stream;
+	return 0;
 }

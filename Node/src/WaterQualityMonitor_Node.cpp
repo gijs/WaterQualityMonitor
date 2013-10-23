@@ -17,7 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "WaterQualityMonitor.h"
+#include "WaterQualityMonitor_Node.h"
 
 int sample_interval = 60;
 int sample_count = 11;
@@ -44,7 +44,7 @@ void setup()
 			35, 			//Atlas SO Pin
 			37, 			//Atlas SI Pin
 			Serial2,		//Atlas Serial Port
-			(char*)"WQ2.DAT",		//RecordStorage filename
+			(char*)"WQ3.DAT",		//RecordStorage filename
 			max_record_size //Maximum Record Size
 
 	);

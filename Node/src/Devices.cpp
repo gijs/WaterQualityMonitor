@@ -269,7 +269,7 @@ void Devices::sample()
 			DEBUG_LN(orp);
 
 			rec.id = ORP;
-			rec.setVal(orp);
+			rec.setVal(orp, 2);
 			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
 		}
 
@@ -281,7 +281,7 @@ void Devices::sample()
 			DEBUG_LN(ph);
 
 			rec.id = PH;
-			rec.setVal(ph);
+			rec.setVal(ph, 2);
 			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
 		}
 
@@ -312,7 +312,7 @@ void Devices::sample()
 			DEBUG_LN(_do);
 
 			rec.id = DO;
-			rec.setVal(_do);
+			rec.setVal(_do, 2);
 			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
 		}
 	}
@@ -369,7 +369,7 @@ void Devices::log_ds18b20(uint8_t* address, time_t time, Sample &sample)
 	double temp = Devices::ds18b20->getTempC(address);
 	if(!isnan(temp) && temp < DS18B20_ERROR_TEMP)
 	{
-		rec.setVal(temp);
+		rec.setVal(temp, 2);
 		rec.time_stamp = time;
 		store->storeRecord((byte*)&rec, sizeof(OneWireRecord));
 		if(isnan(sample.temperature))
