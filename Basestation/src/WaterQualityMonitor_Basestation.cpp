@@ -17,11 +17,16 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "WaterQualityMonitorBasestation.h"
+#include "WaterQualityMonitor_Basestation.h"
 
 
 void setup()
 {
+	Serial.begin(57600);
+	SoftwareSerial* debug = new SoftwareSerial(2,3);
+	debug->begin(115200);
+	uint64_t result = Devices::initilize_devices(10, &Serial, debug);
+
 
 }
 
