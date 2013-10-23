@@ -24,14 +24,14 @@
 #define HEADER_MAGIC_NUMBER 0xDEAFBEEF;
 
 #define ERROR_NO_ERROR 0
-#define ERROR_FAILED_TO_WRITE_HEADER       1
-#define ERROR_INVALID_MAGIC_NUMBER   (1 << 1)
-#define ERROR_WRITING_HEADER         (1 << 2)
+#define ERROR_INVALID_MAGIC_NUMBER   1
+#define ERROR_WRITING_HEADER         (1 << 1)
+#define ERROR_ROW_SIZE_MISMATCH      (1 << 2)
 
 #define RECORD_STORAGE_VA_NARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, N, ...) N
 #define RECORD_STORAGE_VA_NARGS(...) RECORD_STORAGE_VA_NARGS_IMPL(__VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 
-#define max(...) RECORD_STORAGE_MAX(RECORD_STORAGE_VA_NARGS(__VA_ARGS__), __VA_ARGS__)
+#define max_record_size(...) RECORD_STORAGE_MAX(RECORD_STORAGE_VA_NARGS(__VA_ARGS__), __VA_ARGS__)
 
 int32_t RECORD_STORAGE_MAX(int32_t count, ...);
 

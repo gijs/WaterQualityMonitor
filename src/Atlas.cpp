@@ -20,72 +20,191 @@
 #include "Atlas.h"
 
 
-Atlas::Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin, SensorPosition* sensorMap)
+Atlas::Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin/*, SensorPosition* sensorMap*/)
 {
+	sensorCount = 0;
 	this->sensor_stream = sensor_stream;
 	this->e_pin = e_pin;
 	this->so_pin = so_pin;
 	this->si_pin = si_pin;
-	this->sensorMap = sensorMap;
-	validSensorMap = -1;
+
 	pinMode(e_pin, OUTPUT);
 	disable();
 	pinMode(so_pin, OUTPUT);
 	pinMode(si_pin, OUTPUT);
+	probe_ports();
+}
+
+void Atlas::probe_ports() {
+	for (int i = 0; i < ATLAS_MAX_SENSORS; i++) {
+		select(i);
+		enable();
+		sensor_stream->print(END_COMMAND);
+		sensor_stream->print(carrage_return);
+		clean_sensor_port();
+		sensor_stream->print(IDENTIFY_COMMAND);
+		sensor_stream->print(carrage_return);
+		String version = sensor_stream->readStringUntil(carrage_return);
+		_DEBUG(i);
+		_DEBUG(" Version: ");
+		_DEBUG_LN(version);
+
+		if (version.length() > 0) {
+
+			parse_version(version, i);
+
+		}
+		disable();
+	}
+}
+
+void Atlas::parse_version(String &version, int port) {
+	SensorDescriptor* sensor;
+	switch (version[0]) {
+	case 'O':
+	case 'o':
+		sensor = &sensorMap[ORP];
+		break;
+	case 'P':
+	case 'p':
+		sensor = &sensorMap[PH];
+		break;
+	case 'E':
+	case 'e':
+		sensor = &sensorMap[EC];
+		break;
+	case 'D':
+	case 'd':
+		sensor = &sensorMap[DO];
+		break;
+	default:
+		return;
+	}
+
+	int length = version.length();
+	char buf[length + 1];
+	for (int i = 0; i < length; i++) {
+		buf[i] = version[i];
+		if (buf[i] == ',' || buf[i] == '/' || buf[i] == '.') {
+			buf[i] = '\0';
+		}
+	}
+	buf[version.length()] = '\0';
+
+	int section_count = 5;
+
+	char* sections[section_count];
+	int pos = 0;
+	for (int i = 0; i < section_count; i++) {
+		sections[i] = buf + pos;
+		pos += strlen(sections[i]) + 1;
+	}
+
+//	sensor->available = true;
+	sensor->version_major = atoi(sections[1]+1);
+	sensor->version_minor = atoi(sections[2]);
+	sensor->month = atoi(sections[3]);
+	sensor->year = atoi(sections[4]);
+	sensor->port = port;
+	sensorCount++;
+	return;
 }
 
 double Atlas::getPH(double temperature)
 {
 	double toRet = NAN;
-	if (isSensorMapValid() && select(PH)) {
-		;
+	if (select(PH)) {
 		if (!isnan(temperature)) {
 			enable();
 			sensor_stream->print(temperature, 2);
 			sensor_stream->print(carrage_return);
-//			sensor_stream->print('R');
-//			sensor_stream->print(carrage_return);
+			sensor_stream->print(SINGLE_SAMPLE_COMMAND);
+			sensor_stream->print(carrage_return);
 			String d = sensor_stream->readStringUntil(carrage_return);
 			disable();
-			char ph[d.length() + 1];
-			for(unsigned int i = 0; i < d.length(); i++)
-			{
-				ph[i] = d[i];
-			}
-			ph[d.length()] = '\0';
-			toRet = atof(ph);
+			toRet = toDouble(d);
 
 		}
 	}
 	return toRet;
 }
 
-void Atlas::getEC(double temperature, double &us, double &ppm, double &salinity)
+double Atlas::getEC(double temperature, int32_t &us, int32_t &ppm, int32_t &salinity)
 {
+	if (select(EC)) {
+		if (!isnan(temperature)) {
+			enable();
+			sensor_stream->print(temperature, 1);
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(SINGLE_SAMPLE_COMMAND);
+			sensor_stream->print(carrage_return);
+			String result = sensor_stream->readStringUntil(carrage_return);
+
+			char split_on[] = {',', '\0'};
+			char parts_buf[result.length() + 1];
+			memccpy(parts_buf, result.c_str(), sizeof(char), result.length());
+			parts_buf[result.length()] = '\0';
+			int parts_length = split_string_count(parts_buf, result.length(), split_on, strlen(split_on));
+
+
+			char* parts[parts_length];
+			split_string(parts_buf, parts, parts_length);
+			if(parts_length == 3)
+			{
+				us       = atoi(parts[0]);
+				ppm      = atoi(parts[1]);
+				salinity = atoi(parts[2]);
+			}else
+			{
+				DEBUG("Error parsing the DO Output: ");
+				DEBUG_LN(result);
+			}
+			disable();
+			return 0;
+		}
+	}
+	return NAN;
 
 }
 
-double Atlas::getDO(double temperature, double conductivity)
+double Atlas::getDO(double temperature, int32_t us)
 {
-
+	if (select(DO)) {
+		if (!isnan(temperature)) {
+			enable();
+			sensor_stream->print(temperature, 2);
+			sensor_stream->print(comma);
+			sensor_stream->print(us);
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(SINGLE_SAMPLE_COMMAND);
+			sensor_stream->print(carrage_return);
+			String value = sensor_stream->readStringUntil(carrage_return);
+			disable();
+			return toDouble(value);
+		}
+	}
+	return NAN;
 }
 
 double Atlas::getORP()
 {
-
+	if (select(ORP)) {
+		enable();
+		sensor_stream->print(SINGLE_SAMPLE_COMMAND);
+		sensor_stream->print(carrage_return);
+		String value = sensor_stream->readStringUntil(carrage_return);
+		disable();
+		return toDouble(value);
+	}
+	return -1;
 }
 
 String Atlas::dumpPort(Sensor sensorToSelect)
 {
-	if (isSensorMapValid() && select(sensorToSelect)) {
+	if (select(sensorToSelect)) {
 		return sensor_stream->readStringUntil(carrage_return);
 	}
 	return NULL;
-}
-
-void Atlas::selectSensor(Sensor sensorToSelect)
-{
-
 }
 
 void Atlas::clean_sensor_port()
@@ -99,54 +218,91 @@ void Atlas::clean_sensor_port()
 void Atlas::enable()
 {
 	digitalWrite(e_pin, LOW);
+	sensor_stream->print(carrage_return);
+	sensor_stream->print(carrage_return);
+	delay(30);
 	clean_sensor_port();
+
 }
 
 void Atlas::disable(){
 	digitalWrite(e_pin, HIGH);
+	delay(30);
+	clean_sensor_port();
+}
+
+double Atlas::toDouble(String &value)
+{
+	char ph[value.length() + 1];
+	for(unsigned int i = 0; i < value.length(); i++)
+	{
+		ph[i] = value[i];
+	}
+	ph[value.length()] = '\0';
+	return atof(ph);
 }
 
 bool Atlas::select(Sensor sensor)
 {
-	for(int i = 0; i < ATLAS_MAX_SENSORS; i++)
+	if(sensorMap[sensor].port >= 0)
 	{
-		if(sensorMap[i].sensor == sensor)
-		{
-			if((sensorMap[i].sensor & 1) > 0)
-			{
-				digitalWrite(so_pin, HIGH);
-			}else
-			{
-				digitalWrite(so_pin, LOW);
-			}
-			if((sensorMap[i].sensor & 2) > 0)
-			{
-				digitalWrite(si_pin, HIGH);
-			}else
-			{
-				digitalWrite(si_pin, LOW);
-			}
-			return true;
-		}
+		return select(sensorMap[sensor].port);
 	}
 	return false;
 }
 
-bool Atlas::isSensorMapValid()
+bool Atlas::select(int port)
 {
-	if(validSensorMap == -1)
+	if((port & 1) > 0)
 	{
-		for(int i = 0; i < ATLAS_MAX_SENSORS; i++)
+		digitalWrite(so_pin, HIGH);
+	}else
+	{
+		digitalWrite(so_pin, LOW);
+	}
+	if((port & 2) > 0)
+	{
+		digitalWrite(si_pin, HIGH);
+	}else
+	{
+		digitalWrite(si_pin, LOW);
+	}
+	return true;
+}
+
+int8_t Atlas::getSensorCount()
+{
+	return sensorCount;
+}
+
+
+int Atlas::split_string_count(char* toSplit, int length, char split_on[], int split_on_length)
+{
+	int count = 1;
+	for(int i = 0; i < length; i++)
+	{
+		for(int j = 0; j < split_on_length; j++)
 		{
-			if(sensorMap[i].position ==-1 && sensorMap[i].sensor == SENSOR_TERMINATOR)
+			if(toSplit[i] == split_on[j])
 			{
-				validSensorMap = true;
+				count++;
+				toSplit[i] = '\0';
 			}
 		}
-		if(validSensorMap == -1)
-		{
-			validSensorMap = false;
-		}
 	}
-	return validSensorMap;
+	return count;
 }
+
+int Atlas::split_string(char* toSplit, char* result[], int result_length)
+{
+	int pos = 0;
+	int count = 0;
+	for (int i = 0; i < result_length; i++) {
+		result[i] = toSplit + pos;
+		pos += strlen(&toSplit[i]) + 1;
+		count++;
+	}
+	return count;
+}
+
+

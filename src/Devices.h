@@ -34,6 +34,7 @@
 #define LEADING_ZERO(STREAM, value) if(value < 10){STREAM->print(0);}
 #define XBBE_SINK_ADDRESS_MAGIC_NUMBER 0xDEADBEEF
 #define XBEE_SINK_ADDRESS_EEPROM_POSITION 0
+#define XBEE_ASSOCIATE_THRESHOLD 1000
 
 #define SD_FLAG    1
 #define ATLAS_FLAG (1 < 1)
@@ -76,7 +77,8 @@ namespace Devices
 			int sd_cs_pin,
 			uint8_t one_wire_bus_pin,
 			Stream& xbee_bus,
-			SensorPosition* sensorMap,
+			uint8_t xbee_associate_pin,
+//			SensorPosition* sensorMap,
 			uint8_t e_pin, uint8_t so_pin,
 			uint8_t si_pin,
 			Stream& atlas_bus,
@@ -84,7 +86,7 @@ namespace Devices
 			int32_t max_record_size);
 
 	void log_onewire(Sample &sample);
-	void log_ds18b20(uint8_t* address, tmElements_t* time, Sample &sample);
+	void log_ds18b20(uint8_t* address, time_t time, Sample &sample);
 	void displayDate(time_t time, Stream* displayOn);
 	void displayDate(tmElements_t* toDisplay, Stream* displayOn);
 	void displayOneWireAddress(uint8_t* address, uint8_t address_length, Stream* displayOn);

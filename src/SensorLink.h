@@ -38,6 +38,8 @@ struct SensorLinkPacket
 struct SinkPacket: SensorLinkPacket
 {
 	uint32_t flags;
+	uint32_t DH;
+	uint32_t DL;
 	void init();
 };
 

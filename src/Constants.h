@@ -21,6 +21,7 @@
 #define CONSTANTS_H_
 
 static char colon = ':';
+static char comma = ',';
 static char space = ' ';
 static char slash = '/';
 static char tab = '\t';

@@ -23,16 +23,29 @@
 #include "Arduino.h"
 #include "Constants.h"
 
-#define ATLAS_MAX_SENSORS 5
+#define ATLAS_MAX_SENSORS 4
+
+static char END_COMMAND = 'E';
+static char IDENTIFY_COMMAND = 'I';
+static char SINGLE_SAMPLE_COMMAND = 'R';
 
 enum Sensor {
-	PH, DO, ORP, EC, SENSOR_TERMINATOR
+	PH, DO, ORP, EC
 };
 
-struct SensorPosition
+
+
+
+struct SensorDescriptor
 {
-	int8_t position;
-	Sensor sensor;
+////	Sensor sensor;
+//	bool   available;
+	int8_t version_major;
+	int8_t version_minor;
+	int8_t month;
+	int8_t year;
+	int8_t port;
+	SensorDescriptor(): version_major(-1), version_minor(-1), month(-1), year(-1), port(-1){};
 };
 
 
@@ -41,21 +54,30 @@ class Atlas
 private:
 	Stream* sensor_stream;
 	uint8_t e_pin, so_pin, si_pin;
-	SensorPosition* sensorMap;
-	int8_t validSensorMap;
-	void selectSensor(Sensor sensorToSelect);
+	SensorDescriptor sensorMap[ATLAS_MAX_SENSORS];
+	int8_t sensorCount;
+
 	void clean_sensor_port();
 	bool select(Sensor sensor);
+	bool select(int port);
+	void probe_ports();
+	void parse_version(String &version, int port);
 	void enable();
 	void disable();
+
+	double toDouble(String &value);
+	int split_string_count(char* toSplit, int length, char split_on[], int split_on_length);
+	int split_string(char* toSplit, char* result[], int result_length);
+
 public:
-	Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin, SensorPosition* sensorMap);
-	bool isSensorMapValid();
+	Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin/*, SensorPosition* sensorMap*/);
+
 	double getPH(double temperature);
-	void getEC(double temperature, double &us, double &ppm, double &salinity);
-	double getDO(double temperature, double conductivity);
+	double getEC(double temperature, int32_t &us, int32_t &ppm, int32_t &salinity);
+	double getDO(double temperature, int32_t us);
 	double getORP();
 	String dumpPort(Sensor sensorToSelect);
+	int8_t getSensorCount();
 };
 
 

@@ -19,14 +19,34 @@
 
 #include "Records.h"
 
-void Record::setVal(float value)
+DoubleRecord::DoubleRecord()
+{
+	record_type = RECORD_TYPE_DOUBLE_RECORD;
+	id = 0;
+}
+void DoubleRecord::setVal(float value)
 {
 	characteristic = int(value);
 	mantissa = (value - characteristic) * 100;
+	exponent = 2;
+}
+
+OneWireRecord::OneWireRecord()
+{
+	record_type = RECORD_TYPE_ONE_WIRE_RECORD;
+	for(int i = 0; i < 8; i++)
+	{
+		id[i] = 0;
+	}
 }
 
 void OneWireRecord::setVal(float value)
 {
 	characteristic = int(value);
 	mantissa = (value - characteristic) * 100;
+}
+
+SalinityRecord::SalinityRecord() {
+	record_type = SALINITY_RECORD;
+	id = 0;
 }

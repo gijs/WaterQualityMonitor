@@ -25,7 +25,7 @@ int sample_upload_at = 12;
 
 int max_transmitt_count = 5;
 
-int32_t max_record_size = max(sizeof(Record), sizeof(OneWireRecord));
+int32_t max_record_size = max_record_size(sizeof(DoubleRecord), sizeof(OneWireRecord), sizeof(SalinityRecord));
 
 volatile bool is_downtime = true;
 
@@ -33,18 +33,20 @@ void setup()
 {
 	Serial.begin(57600);
 	START_DEBUG_STREAM(115200);
-	Serial2.begin(38800);
+	Serial2.begin(38400);
 	uint32_t device_status = Devices::initilize_devices(
 			4, 				//SD CS pin
 			31, 			//OneWire Bus
 			Serial, 		//XBee Serial Port
-			sensorMap,  	//Atlas Sensor Map
+			A0,
+//			sensorMap,  	//Atlas Sensor Map
 			33, 			//Atlas E Pin
 			35, 			//Atlas SO Pin
-			36, 			//Atlas SI Pin
+			37, 			//Atlas SI Pin
 			Serial2,		//Atlas Serial Port
-			"WQ1.DAT",		//RecordStorage filename
+			(char*)"WQ2.DAT",		//RecordStorage filename
 			max_record_size //Maximum Record Size
+
 	);
 
 	downtime("Aligning to boundary");
@@ -62,7 +64,7 @@ void loop()
 	downtime("Sleeping...");
 }
 
-void downtime(char* message)
+void downtime(const char* message)
 {
 	attachInterrupt(0, INT0_ISR, FALLING);
 	DEBUG(message);
@@ -143,7 +145,7 @@ void upload()
 	DEBUG_LN((int)data);
 
 	header->flags = 0;
-	header->row_count = records_per_packet;
+
 	header->row_size = record_size;
 	header->senquence = 0;
 
@@ -162,7 +164,7 @@ void upload()
 		DEBUG_LN(pos);
 
 		int32_t to_upload = records_to_upload > records_per_packet ? records_per_packet : records_to_upload;
-
+		header->row_count = to_upload;
 		_DEBUG("Records to upload in this packet: ");
 		DEBUG_LN(to_upload);
 

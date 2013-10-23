@@ -23,30 +23,52 @@
 #include "Arduino.h"
 #include "Time.h"
 
-struct Record
+
+#define RECORD_TYPE_DOUBLE_RECORD 1
+#define RECORD_TYPE_ONE_WIRE_RECORD 2
+#define SALINITY_RECORD 3
+
+struct BaseRecord
 {
 	int8_t record_type;
+};
+
+struct R: BaseRecord
+{
 	int8_t id;
 	time_t time_stamp;
-	int8_t characteristic;
-	int8_t mantissa;
+};
+
+struct DoubleRecord: R
+{
+	int16_t characteristic;
+	int16_t mantissa;
+	int8_t exponent;
 
 	void setVal(float ph);
 
-	Record(): record_type(0), id(0){};
+	DoubleRecord();//: record_type(RECORD_TYPE_DOUBLE_RECORD), id(0){};
 };
 
-struct OneWireRecord
+struct OneWireRecord: BaseRecord
 {
-	int8_t record_type;
 	int8_t id[8];
 	time_t time_stamp;
 	int8_t characteristic;
 	int8_t mantissa;
 
-	OneWireRecord(): record_type(1){};
+	OneWireRecord();//: record_type(RECORD_TYPE_ONE_WIRE_RECORD){};
 
 	void setVal(float ph);
+};
+
+struct SalinityRecord: R
+{
+	int32_t us;
+	int32_t ppm;
+	int32_t salinity;
+
+	SalinityRecord();
 };
 
 #endif /* RECORDS_H_ */

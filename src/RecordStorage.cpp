@@ -59,14 +59,16 @@ RecordStorage::RecordStorage(int32_t maxRecordSize, char* fileName, Stream* debu
 //			debug->println(store.size());
 //		}
 		readHeader();
+		if(header->maxRecordSize != maxRecordSize)
+		{
+			error_code = error_code | ERROR_ROW_SIZE_MISMATCH;
+		}
 	} else {
 		header = (RecordHeader*) calloc(sizeof(RecordHeader), 1);
 		header->magicNumber = HEADER_MAGIC_NUMBER;
 		header->maxRecordSize = maxRecordSize;
 		header->uploaded = 0;
-		if (!writeHeader()) {
-			error_code = error_code | ERROR_FAILED_TO_WRITE_HEADER;
-		}
+		writeHeader();
 	}
 }
 

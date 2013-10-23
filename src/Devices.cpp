@@ -29,52 +29,91 @@ list_node<XBeeResponse>* Devices::packet_queue_head = NULL;
 list_node<XBeeResponse>* Devices::packet_queue_tail = NULL;
 
 
-uint32_t Devices::initilize_devices(int sd_cs_pin, uint8_t one_wire_bus_pin, Stream& xbee_bus, SensorPosition* sensorMap, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin, Stream& atlas_bus, char* record_store_filename, int32_t max_record_size)
-{
+uint32_t Devices::initilize_devices(
+		int sd_cs_pin,
+		uint8_t one_wire_bus_pin,
+		Stream& xbee_bus,
+		uint8_t xbee_associate_pin,
+		/*SensorPosition* sensorMap,*/
+		uint8_t e_pin,
+		uint8_t so_pin,
+		uint8_t si_pin,
+		Stream& atlas_bus,
+		char* record_store_filename,
+		int32_t max_record_size) {
+
 	uint32_t toRet = 0;
 	pinMode(sd_cs_pin, OUTPUT);
 	if (SD.begin(sd_cs_pin)) {
-		toRet |= SD_FLAG;
-		store = new RecordStorage(max_record_size, record_store_filename, &DEBUG_STREAM);
 		DEBUG_LN("SD Initialized!");
+		toRet |= SD_FLAG;
+		store = new RecordStorage(max_record_size, record_store_filename,
+				&DEBUG_STREAM);
+		if(store->getErrorCode() == ERROR_NO_ERROR)
+		{
+
+		}else{
+			uint64_t code = store->getErrorCode();
+			if((code | ERROR_INVALID_MAGIC_NUMBER) > 0)
+			{
+				DEBUG_LN("The Record Storage had an invalid Magic Number.");
+			}else if ((code | ERROR_WRITING_HEADER) > 0){
+				DEBUG_LN("The Record Storage could not write the header.");
+			}else if((code | ERROR_ROW_SIZE_MISMATCH) > 0)
+			{
+				DEBUG_LN("The Record Storage row size does not match.");
+			}
+		}
 	}
 
 	Devices::bus = new OneWire(one_wire_bus_pin);
 	Devices::ds18b20 = new DallasTemperature(bus);
 
-	Devices::xbee = new XBee();
-	Devices::xbee->begin(xbee_bus);
-
-	Devices::sink_address = new XBeeSinkAddress();
-	byte address[sizeof(XBeeSinkAddress)];
-
-	uint16_t read_count = read_eeprom((byte*)&address, XBEE_SINK_ADDRESS_EEPROM_POSITION, sizeof(XBeeSinkAddress));
-	DEBUG("EEPROM Read Count: ");
-	DEBUG_LN(read_count);
-
-
-	XBeeSinkAddress* addr = (XBeeSinkAddress*)(&address);
-	if(addr->magic_number == XBBE_SINK_ADDRESS_MAGIC_NUMBER)
+	//Initialize XBEE
 	{
-		Devices::sink_address->DH = addr->DH;
-		Devices::sink_address->DL = addr->DL;
-	}else
-	{
-		DEBUG_LN("XBee sink address not set, searching...");
-		findSink();
+		Devices::xbee = new XBee();
+		Devices::xbee->begin(xbee_bus);
+
+		Devices::sink_address = new XBeeSinkAddress();
+		byte address[sizeof(XBeeSinkAddress)];
+
+		XBeeSinkAddress* addr = (XBeeSinkAddress*) (&address);
+
+		//Is the associate pin pulled high? If so search for the sink node
+		pinMode(xbee_associate_pin, INPUT);
+		uint16_t associate_pin_value = analogRead(xbee_associate_pin);
+		DEBUG("Associate Pin value: ");
+		DEBUG_LN(associate_pin_value);
+		if (associate_pin_value > XBEE_ASSOCIATE_THRESHOLD) {
+			addr->magic_number = 0;
+			DEBUG_LN("Resetting Sink Address");
+		} else {
+			uint16_t read_count = read_eeprom((byte*) &address,
+					XBEE_SINK_ADDRESS_EEPROM_POSITION, sizeof(XBeeSinkAddress));
+			DEBUG("EEPROM Read Count: ");
+			DEBUG_LN(read_count);
+		}
+
+		if (addr->magic_number == XBBE_SINK_ADDRESS_MAGIC_NUMBER) {
+			Devices::sink_address->DH = addr->DH;
+			Devices::sink_address->DL = addr->DL;
+		} else {
+			DEBUG_LN("XBee sink address not set, searching...");
+			findSink();
+		}
+		DEBUG("XBee sink address: 0x");
+		DEBUG_(Devices::sink_address->DH, HEX);
+		DEBUG(" 0x");
+		DEBUG_LN_(Devices::sink_address->DL, HEX);
 	}
-	DEBUG("XBee sink address: 0x");
-	DEBUG_(Devices::sink_address->DH, HEX);
-	DEBUG(" 0x");
-	DEBUG_LN_(Devices::sink_address->DL, HEX);
 
 	RTC.set33kHzOutput(false);
 	RTC.clearAlarmFlag(3);
 	RTC.setSQIMode(sqiModeAlarm1);
 
-	Devices::atlas = new Atlas(&atlas_bus, e_pin, so_pin, si_pin, sensorMap);
-	if(!Devices::atlas->isSensorMapValid())
-	{
+	Devices::atlas = new Atlas(&atlas_bus, e_pin, so_pin,
+			si_pin/*, sensorMap*/);
+	if (Devices::atlas->getSensorCount() == 0) {
 		toRet |= ATLAS_FLAG;
 	}
 	return toRet;
@@ -85,22 +124,51 @@ bool Devices::findSink()
 	XBeeSinkAddress address;
 	XBeeAddress64 addr64 = XBeeAddress64(address.DH, address.DL);
 	SinkPacket packet;
+	packet.init();
 	ZBTxRequest request(addr64, (byte*)&packet, sizeof(SinkPacket));
 
 
 	Devices::xbee->send(request);
+
 	if(wait_for_packet_type(5000, ZB_TX_STATUS_RESPONSE))
 	{
+		ZBTxStatusResponse response;
+		Devices::xbee->getResponse(response);
+		if(wait_for_packet_type(5000, ZB_RX_RESPONSE))
+		{
+			ZBRxResponse request;
+			Devices::xbee->getResponse(request);
+			byte* data = request.getData();
+			SinkPacket* packet = (SinkPacket*)data;
+
+			Devices::sink_address->magic_number = XBBE_SINK_ADDRESS_MAGIC_NUMBER;
+			Devices::sink_address->DH = packet->DH;
+			Devices::sink_address->DL = packet->DL;
+
+			uint16_t read_count = write_eeprom((byte*)Devices::sink_address, XBEE_SINK_ADDRESS_EEPROM_POSITION, sizeof(XBeeSinkAddress));
+			if(read_count == sizeof(XBeeSinkAddress))
+			{
+				DEBUG("Wrote XBee Sink address to EEPROM, DH: 0x");
+				DEBUG_(Devices::sink_address->DH, HEX);
+				DEBUG(", DL: 0x");
+				DEBUG_LN_(Devices::sink_address->DL, HEX);
+				return true;
+			}else
+			{
+				DEBUG("Failed to write XBee Sink address to EEPROM, killing magic number.");
+				EEPROM.write(XBEE_SINK_ADDRESS_EEPROM_POSITION, 0);
+			}
+		}
 
 	}
-
+	return false;
 
 }
 
 bool Devices::wait_for_packet_type(int timeout, int api_id)
 {
 
-	long end = millis() + timeout;
+	unsigned long end = millis() + timeout;
 	while(millis() < end)
 	{
 		if(Devices::xbee->readPacket(end - millis()) && Devices::xbee->getResponse().getApiId() == api_id)
@@ -158,6 +226,7 @@ bool Devices::queue_packet()
 	case MODEM_STATUS_RESPONSE:
 		break;
 	case ZB_RX_RESPONSE:
+		_QUEUE_PACKET(ZBRxResponse);
 		break;
 	case ZB_EXPLICIT_RX_RESPONSE:
 		break;
@@ -177,6 +246,8 @@ bool Devices::queue_packet()
 		break;
 	}
 
+	return false;
+
 }
 
 void Devices::sample()
@@ -189,8 +260,7 @@ void Devices::sample()
 		_DEBUG("Temperature: ");
 		DEBUG_LN(sample.temperature);
 
-		Record rec;
-
+		DoubleRecord rec;
 		double orp = Devices::atlas->getORP();
 		rec.time_stamp = RTC.get();
 		if(!isnan(orp))
@@ -200,9 +270,8 @@ void Devices::sample()
 
 			rec.id = ORP;
 			rec.setVal(orp);
-			store->storeRecord((byte*)&rec, sizeof(Record));
+			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
 		}
-
 
 		double ph = Devices::atlas->getPH(sample.temperature);
 		rec.time_stamp = RTC.get();
@@ -213,13 +282,29 @@ void Devices::sample()
 
 			rec.id = PH;
 			rec.setVal(ph);
-			store->storeRecord((byte*)&rec, sizeof(Record));
+			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
 		}
 
-		double us = NAN, ppm = NAN, salinity = NAN;
+		int32_t us = -1, ppm = -1, salinity = -1;
 		Devices::atlas->getEC(sample.temperature, us, ppm, salinity);
+		SalinityRecord ec_rec;
+		ec_rec.time_stamp = RTC.get();
+		if(us >= 0 && ppm >=0  && salinity >= 0)
+		{
+			_DEBUG("uS: ");
+			DEBUG(us);
+			DEBUG(", PPM: ");
+			DEBUG(ppm);
+			DEBUG(", Salinity: ");
+			DEBUG_LN(salinity);
+			ec_rec.id = EC;
+			ec_rec.us = us;
+			ec_rec.ppm = ppm;
+			ec_rec.salinity = salinity;
+			store->storeRecord((byte*)&ec_rec, sizeof(SalinityRecord));
+		}
 
-		double _do = Devices::atlas->getDO(sample.temperature, 0);
+		double _do = Devices::atlas->getDO(sample.temperature, ec_rec.salinity);
 		rec.time_stamp = RTC.get();
 		if(!isnan(_do))
 		{
@@ -228,7 +313,7 @@ void Devices::sample()
 
 			rec.id = DO;
 			rec.setVal(_do);
-			store->storeRecord((byte*)&rec, sizeof(Record));
+			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
 		}
 	}
 }
@@ -236,21 +321,22 @@ void Devices::sample()
 
 void Devices::log_onewire(Sample &sample)
 {
-	tmElements_t time;
+//	tmElements_t time;
 
 	Devices::bus->reset_search();
 	uint8_t address[8];
 	boolean found = false;
 	Devices::ds18b20->begin();
 	Devices::ds18b20->requestTemperatures();
-	RTC.read(time);
+//	RTC.read(time);
+	time_t time = RTC.get();
 	while (Devices::bus->search(address)) {
 		if (OneWire::crc8(address, 7) == address[7]) {
 			switch (address[0]) {
 			case 0x28:
 			case 0x10:
 				found = true;
-				Devices::log_ds18b20(address, &time, sample);
+				Devices::log_ds18b20(address, time, sample);
 				break;
 			default:
 				break;
@@ -272,7 +358,7 @@ void Devices::log_onewire(Sample &sample)
 	}
 }
 
-void Devices::log_ds18b20(uint8_t* address, tmElements_t* time, Sample &sample)
+void Devices::log_ds18b20(uint8_t* address, time_t time, Sample &sample)
 {
 	OneWireRecord rec;
 	for(int i = 0; i < 8; i++)
@@ -284,6 +370,7 @@ void Devices::log_ds18b20(uint8_t* address, tmElements_t* time, Sample &sample)
 	if(!isnan(temp) && temp < DS18B20_ERROR_TEMP)
 	{
 		rec.setVal(temp);
+		rec.time_stamp = time;
 		store->storeRecord((byte*)&rec, sizeof(OneWireRecord));
 		if(isnan(sample.temperature))
 		{

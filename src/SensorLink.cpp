@@ -23,6 +23,8 @@ void SinkPacket::init()
 {
 	packet_type = SENSORLINK_SINK_PACKET;
 	header_size = sizeof(SinkPacket);
+	DH = 0x1F2F3F4F;
+	DL = 0x1B2B3B4B;
 	flags = 0;
 }
 
