@@ -3,3 +3,6 @@ Release*
 lib/Time*
 lib/OneWire*
 lib/XBee*
+.cproject
+.project
+.settings
