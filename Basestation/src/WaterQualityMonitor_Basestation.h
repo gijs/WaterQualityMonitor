@@ -33,4 +33,8 @@ void setup();
 } // extern "C"
 #endif
 
+void handle_rx_request(ZBRxResponse &request);
+void handle_sink_request(ZBRxResponse &request);
+void handle_data_request(ZBRxResponse &request);
+
 #endif /* WaterQualityMonitorBasestation_H_ */

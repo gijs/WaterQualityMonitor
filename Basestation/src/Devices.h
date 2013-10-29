@@ -20,14 +20,39 @@
 #ifndef DEVICES_H_
 #define DEVICES_H_
 
+#include "Constants.h"
 #include "SoftwareSerial.h"
+#include "DS3232RTC.h"
+#include "XBee.h"
+#include "SensorLink.h"
+#include "XBeeUtil.h"
+#include "SD.h"
+#include "RecordStorage.h"
+#include "Records.h"
+
+#define DEVICES_SD_ERROR 1
+#define DEVICES_RTC_ERROR 2
+#define DEVICES_RADIO_ERROR 4
+#define DEVICES_SD_ERROR 16
+
+#define LEADING_ZERO(STREAM, value) if(value < 10){STREAM->print(0);}
 
 namespace Devices
 {
 	extern Stream* xbee_stream;
 	extern Stream* debug_stream;
+	extern RecordStorage* store;
+	extern XBee*   xbee;
+	extern int32_t SH;
+	extern int32_t SL;
 
-	uint64_t initilize_devices(int sd_cs_pin, Stream* xbee_stream, Stream* debug_stream);
+	uint64_t initilize_devices(int sd_cs_pin, char* store_files_name, int32_t max_record_size, Stream* xbee_stream, Stream* debug_stream);
+
+	void flash_print(Stream* stream, const prog_char *ptr);
+	void flash_println(Stream* stream, const prog_char *ptr);
+
+	void displayDate(time_t time, Stream* displayOn);
+	void displayDate(tmElements_t* toDisplay, Stream* displayOn);
 
 }
 
