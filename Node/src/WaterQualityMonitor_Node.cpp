@@ -34,9 +34,10 @@ void setup()
 	Serial.begin(57600);
 	START_DEBUG_STREAM(115200);
 	Serial2.begin(38400);
+	DEBUG_LN("Starting...");
 	uint32_t device_status = Devices::initilize_devices(
 			4, 				//SD CS pin
-			31, 			//OneWire Bus
+			32, 			//OneWire Bus
 			Serial, 		//XBee Serial Port
 			A0,
 //			sensorMap,  	//Atlas Sensor Map
@@ -44,10 +45,16 @@ void setup()
 			35, 			//Atlas SO Pin
 			37, 			//Atlas SI Pin
 			Serial2,		//Atlas Serial Port
-			(char*)"WQ3.DAT",		//RecordStorage filename
+			(char*)"WQM.DAT",		//RecordStorage filename
 			max_record_size //Maximum Record Size
 
 	);
+	if(device_status > 0)
+	{
+		DEBUG("Error initializing device: ");
+		DEBUG_LN(device_status);
+		while(true){};
+	}
 
 	downtime("Aligning to boundary");
 
@@ -98,7 +105,9 @@ time_t wakeup_at()
 void upload()
 {
 	DEBUG_LN("Upload: ");
-//	XBeeAddress64 addr64 = XBeeAddress64(0x0013a200, 0x40a53d1e);
+	Devices::associate();
+//	XBeeAddress64 addr64 = XBeeAddress64(0x0, BROADCAST_ADDRESS);
+	//XBeeAddress64 addr64 = XBeeAddress64(0x0013a200, 0x40a53d1e);
 	XBeeAddress64 addr64 = XBeeAddress64(Devices::sink_address->DH, Devices::sink_address->DL);
 	if(!Devices::associate())
 	{
@@ -177,12 +186,14 @@ void upload()
 
 		Devices::store->setUploadedCount(pos);
 		request.setPayloadLength(header_size + (to_upload * record_size));
+
 		Devices::xbee->send(request);
 		if(Devices::xbee->readPacket(5000) && Devices::xbee->getResponse().getApiId() == ZB_TX_STATUS_RESPONSE)
 		{
 
-
 			Devices::xbee->getResponse(response);
+			DEBUG("Delivery status: ");
+			DEBUG_LN(response.getDeliveryStatus());
 			if(response.isSuccess())
 			{
 				DEBUG_LN();
@@ -192,6 +203,7 @@ void upload()
 				header->senquence += 1;
 				records_to_upload = Devices::store->getRecordCount() - Devices::store->getUploadedCount();
 				fail_count = 0;
+				delay(500);
 			}else
 			{
 				DEBUG_LN();

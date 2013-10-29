@@ -40,6 +40,7 @@ void downtime(const char* message);
 void upload();
 void sample();
 bool do_upload();
+bool isDataHandled(ZBTxStatusResponse &response);
 time_t wakeup_at();
 void INT0_ISR();
 

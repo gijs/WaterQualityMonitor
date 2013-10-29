@@ -41,6 +41,9 @@ void Atlas::probe_ports() {
 		enable();
 		sensor_stream->print(END_COMMAND);
 		sensor_stream->print(carrage_return);
+		delay(100);
+		sensor_stream->print(END_COMMAND);
+		sensor_stream->print(carrage_return);
 		clean_sensor_port();
 		sensor_stream->print(IDENTIFY_COMMAND);
 		sensor_stream->print(carrage_return);
@@ -54,6 +57,8 @@ void Atlas::probe_ports() {
 			parse_version(version, i);
 
 		}
+//		sensor_stream->print('L1');
+//		sensor_stream->print(carrage_return);
 		disable();
 	}
 }
@@ -100,7 +105,6 @@ void Atlas::parse_version(String &version, int port) {
 		pos += strlen(sections[i]) + 1;
 	}
 
-//	sensor->available = true;
 	sensor->version_major = atoi(sections[1]+1);
 	sensor->version_minor = atoi(sections[2]);
 	sensor->month = atoi(sections[3]);
@@ -156,7 +160,7 @@ double Atlas::getEC(double temperature, int32_t &us, int32_t &ppm, int32_t &sali
 				salinity = atoi(parts[2]);
 			}else
 			{
-				DEBUG("Error parsing the DO Output: ");
+				DEBUG("Error parsing the EC Output: ");
 				DEBUG_LN(result);
 			}
 			disable();
@@ -196,7 +200,7 @@ double Atlas::getORP()
 		disable();
 		return toDouble(value);
 	}
-	return -1;
+	return NAN;
 }
 
 String Atlas::dumpPort(Sensor sensorToSelect)

@@ -28,11 +28,14 @@ XBeeSinkAddress* Devices::sink_address;
 list_node<XBeeResponse>* Devices::packet_queue_head = NULL;
 list_node<XBeeResponse>* Devices::packet_queue_tail = NULL;
 
+int32_t Devices::SH;
+int32_t Devices::SL;
+
 
 uint32_t Devices::initilize_devices(
 		int sd_cs_pin,
 		uint8_t one_wire_bus_pin,
-		Stream& xbee_bus,
+		Stream& xbee_stream,
 		uint8_t xbee_associate_pin,
 		/*SensorPosition* sensorMap,*/
 		uint8_t e_pin,
@@ -44,11 +47,14 @@ uint32_t Devices::initilize_devices(
 
 	uint32_t toRet = 0;
 	pinMode(sd_cs_pin, OUTPUT);
+	if(!setupXbee(xbee_stream, xbee_associate_pin))
+	{
+		toRet = toRet | ERROR_CODE_XBEE_FLAG;
+	}
 	if (SD.begin(sd_cs_pin)) {
 		DEBUG_LN("SD Initialized!");
-		toRet |= SD_FLAG;
-		store = new RecordStorage(max_record_size, record_store_filename,
-				&DEBUG_STREAM);
+
+		store = new RecordStorage(max_record_size,record_store_filename, Devices::SH, Devices::SL, &DEBUG_STREAM);
 		if(store->getErrorCode() == ERROR_NO_ERROR)
 		{
 
@@ -64,15 +70,37 @@ uint32_t Devices::initilize_devices(
 				DEBUG_LN("The Record Storage row size does not match.");
 			}
 		}
+	}else
+	{
+		toRet |= ERROR_CODE_SD_FLAG;
 	}
 
 	Devices::bus = new OneWire(one_wire_bus_pin);
 	Devices::ds18b20 = new DallasTemperature(bus);
 
+	RTC.set33kHzOutput(false);
+	RTC.clearAlarmFlag(3);
+	RTC.setSQIMode(sqiModeAlarm1);
+
+	Devices::atlas = new Atlas(&atlas_bus, e_pin, so_pin, si_pin);
+	if (Devices::atlas->getSensorCount() == 0) {
+		toRet |= ERROR_CODE_ATLAS_FLAG;
+	}
+	return toRet;
+}
+
+bool Devices::setupXbee(Stream& xbee_stream, uint8_t xbee_associate_pin)
+{
 	//Initialize XBEE
-	{
+
 		Devices::xbee = new XBee();
-		Devices::xbee->begin(xbee_bus);
+		Devices::xbee->begin(xbee_stream);
+
+		XBeeUtil::getRadioAddress(Devices::xbee, Devices::SH, Devices::SL, &DEBUG_STREAM);
+		DEBUG("Radio Address: 0x");
+		DEBUG_(Devices::SH, HEX);
+		DEBUG(" 0x");
+		DEBUG_LN_(Devices::SL, HEX);
 
 		Devices::sink_address = new XBeeSinkAddress();
 		byte address[sizeof(XBeeSinkAddress)];
@@ -105,18 +133,7 @@ uint32_t Devices::initilize_devices(
 		DEBUG_(Devices::sink_address->DH, HEX);
 		DEBUG(" 0x");
 		DEBUG_LN_(Devices::sink_address->DL, HEX);
-	}
-
-	RTC.set33kHzOutput(false);
-	RTC.clearAlarmFlag(3);
-	RTC.setSQIMode(sqiModeAlarm1);
-
-	Devices::atlas = new Atlas(&atlas_bus, e_pin, so_pin,
-			si_pin/*, sensorMap*/);
-	if (Devices::atlas->getSensorCount() == 0) {
-		toRet |= ATLAS_FLAG;
-	}
-	return toRet;
+		return true;
 }
 
 bool Devices::findSink()
@@ -130,11 +147,11 @@ bool Devices::findSink()
 
 	Devices::xbee->send(request);
 
-	if(wait_for_packet_type(5000, ZB_TX_STATUS_RESPONSE))
+	if(XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_TX_STATUS_RESPONSE, Devices::queue_packet))
 	{
 		ZBTxStatusResponse response;
 		Devices::xbee->getResponse(response);
-		if(wait_for_packet_type(5000, ZB_RX_RESPONSE))
+		if(XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_RX_RESPONSE, Devices::queue_packet))
 		{
 			ZBRxResponse request;
 			Devices::xbee->getResponse(request);
@@ -165,22 +182,22 @@ bool Devices::findSink()
 
 }
 
-bool Devices::wait_for_packet_type(int timeout, int api_id)
-{
-
-	unsigned long end = millis() + timeout;
-	while(millis() < end)
-	{
-		if(Devices::xbee->readPacket(end - millis()) && Devices::xbee->getResponse().getApiId() == api_id)
-		{
-			return true;
-		}else
-		{
-			queue_packet();
-		}
-	}
-	return false;
-}
+//bool Devices::wait_for_packet_type(int timeout, int api_id)
+//{
+//
+//	unsigned long end = millis() + timeout;
+//	while(millis() < end)
+//	{
+//		if(Devices::xbee->readPacket(end - millis()) && Devices::xbee->getResponse().getApiId() == api_id)
+//		{
+//			return true;
+//		}else
+//		{
+//			queue_packet();
+//		}
+//	}
+//	return false;
+//}
 
 void _queue_packet(XBeeResponse* packet)
 {
@@ -204,7 +221,7 @@ void _queue_packet(XBeeResponse* packet)
 		_queue_packet(packet);}
 
 
-bool Devices::queue_packet()
+void Devices::queue_packet()
 {
 
 	switch (Devices::xbee->getResponse().getApiId()) {
@@ -238,15 +255,15 @@ bool Devices::queue_packet()
 		break;
 	case AT_COMMAND_RESPONSE:
 		_QUEUE_PACKET(AtCommandResponse);
-		return true;
+//		return true;
 		break;
 	case REMOTE_AT_COMMAND_RESPONSE:
 		_QUEUE_PACKET(RemoteAtCommandResponse);
-		return true;
+//		return true;
 		break;
 	}
 
-	return false;
+//	return false;
 
 }
 

@@ -30,14 +30,16 @@
 #include "SensorLink.h"
 #include "Records.h"
 #include "EEPROM.h"
+#include "XBeeUtil.h"
 
 #define LEADING_ZERO(STREAM, value) if(value < 10){STREAM->print(0);}
 #define XBBE_SINK_ADDRESS_MAGIC_NUMBER 0xDEADBEEF
 #define XBEE_SINK_ADDRESS_EEPROM_POSITION 0
 #define XBEE_ASSOCIATE_THRESHOLD 1000
 
-#define SD_FLAG    1
-#define ATLAS_FLAG (1 < 1)
+#define ERROR_CODE_SD_FLAG    1
+#define ERROR_CODE_ATLAS_FLAG (1 < 1)
+#define ERROR_CODE_XBEE_FLAG  (1 < 2)
 #define DS18B20_ERROR_TEMP 85
 
 struct Sample
@@ -73,6 +75,9 @@ namespace Devices
 	extern XBeeSinkAddress* sink_address;
 	extern list_node<XBeeResponse> *packet_queue_head, *packet_queue_tail;
 
+	extern int32_t SH;
+	extern int32_t SL;
+
 	uint32_t initilize_devices(
 			int sd_cs_pin,
 			uint8_t one_wire_bus_pin,
@@ -85,6 +90,9 @@ namespace Devices
 			char* record_store_filename,
 			int32_t max_record_size);
 
+
+	bool setupXbee(Stream& xbee_stream, uint8_t xbee_associate_pin);
+
 	void log_onewire(Sample &sample);
 	void log_ds18b20(uint8_t* address, time_t time, Sample &sample);
 	void displayDate(time_t time, Stream* displayOn);
@@ -95,8 +103,8 @@ namespace Devices
 
 	bool associate();
 	bool findSink();
-	bool queue_packet();
-	bool wait_for_packet_type(int timeout, int api_id);
+	void queue_packet();
+//	bool wait_for_packet_type(int timeout, int api_id);
 
 
 
