@@ -21,7 +21,7 @@
 #define __RECORD_STORAGE_H_
 
 #include <SD.h>
-#define HEADER_MAGIC_NUMBER 0xDEAFBEEF;
+#define HEADER_MAGIC_NUMBER 0xDEAFBEEF
 
 #define ERROR_NO_ERROR 0
 #define ERROR_INVALID_MAGIC_NUMBER   1
@@ -40,12 +40,15 @@ struct RecordHeader
 	uint64_t magicNumber;
 	int32_t maxRecordSize;
 	int32_t uploaded;
+	int32_t id_msb;
+	int32_t id_lsb;
+
 };
 
 class RecordStorage
 {
 private:
-	uint64_t magic;
+//	uint64_t magic;
 	uint64_t error_code;
 	char* file_name;
 	RecordHeader* header;
@@ -58,7 +61,7 @@ private:
 
 
 public:
-	RecordStorage(int32_t maxRecordSize, char* fileName, Stream* debugStream = NULL);
+	RecordStorage(int32_t maxRecordSize, char* fileName, int32_t id_msb, int32_t id_lsb, Stream* debugStream = NULL);
 	~RecordStorage();
 	boolean goodToGo();
 	boolean storeRecord(byte* record, int32_t recordSize);

@@ -36,7 +36,7 @@ int32_t RECORD_STORAGE_MAX(int32_t count, ...)
 	return max;
 }
 
-RecordStorage::RecordStorage(int32_t maxRecordSize, char* fileName, Stream* debugStream) {
+RecordStorage::RecordStorage(int32_t maxRecordSize, char* fileName, int32_t id_msb, int32_t id_lsb, Stream* debugStream) {
 	closed = false;
 	debug = debugStream;
 //	if(debug != NULL)
@@ -50,7 +50,7 @@ RecordStorage::RecordStorage(int32_t maxRecordSize, char* fileName, Stream* debu
 	error_code = 0;
 	header = NULL;
 
-	magic = HEADER_MAGIC_NUMBER;
+//	magic = HEADER_MAGIC_NUMBER;
 
 	if (SD.exists(fileName) ) {
 //		if(debug != NULL)
@@ -86,7 +86,7 @@ void RecordStorage::readHeader() {
 		store.seek(0);
 		header = (RecordHeader*) calloc(sizeof(RecordHeader), 1);
 		store.read(header, sizeof(RecordHeader));
-		if (header->magicNumber != magic) {
+		if (header->magicNumber != (HEADER_MAGIC_NUMBER)) {
 			free(header);
 			header = NULL;
 			error_code = error_code | ERROR_INVALID_MAGIC_NUMBER;
@@ -160,7 +160,7 @@ boolean RecordStorage::goodToGo() {
 	{
 		open();
 	}
-	return header != NULL && header->magicNumber == magic
+	return header != NULL && header->magicNumber == HEADER_MAGIC_NUMBER
 			&& error_code == ERROR_NO_ERROR && store.operator bool();
 }
 
