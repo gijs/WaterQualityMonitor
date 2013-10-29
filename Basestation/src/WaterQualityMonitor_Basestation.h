@@ -23,6 +23,14 @@
 #include "Arduino.h"
 #include "Devices.h"
 
+#include <avr/sleep.h>
+#include <avr/power.h>
+#include <avr/power.h>
+
+#define RADIO_RECEIVE_SECONDS 120
+
+
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,8 +41,11 @@ void setup();
 } // extern "C"
 #endif
 
+time_t wakeup_at();
+void handle();
 void handle_rx_request(ZBRxResponse &request);
 void handle_sink_request(ZBRxResponse &request);
 void handle_data_request(ZBRxResponse &request);
+void INT0_ISR();
 
 #endif /* WaterQualityMonitorBasestation_H_ */

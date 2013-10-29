@@ -28,6 +28,10 @@ int32_t Devices::SL;
 
 uint64_t Devices::initilize_devices(int sd_cs_pin, char* store_files_name, int32_t max_record_size, Stream* xbee_stream, Stream* debug_stream)
 {
+	pinMode(RGB_RED_PIN, OUTPUT);
+	pinMode(RGB_GREEN_PIN, OUTPUT);
+	pinMode(RGB_BLUE_PIN, OUTPUT);
+
 	uint64_t ERROR_CODE = 0;
 	Devices::debug_stream = debug_stream;
 	___FDEBUG_LN(WQM_Strings::INITIALIZING_DEVICES);
@@ -40,7 +44,7 @@ uint64_t Devices::initilize_devices(int sd_cs_pin, char* store_files_name, int32
 	Devices::xbee = new XBee();
 	Devices::xbee->begin(*xbee_stream);
 	int32_t a,b;
-	if(!XBeeUtil::getRadioAddress(Devices::xbee, Devices::SH, Devices::SL, DEBUG_STREAM))
+	if(!XBeeUtil::getRadioAddress(Devices::xbee, Devices::SH, Devices::SL, DEBUG_STREAM) && !XBeeUtil::associate(Devices::xbee))
 	{
 		ERROR_CODE = ERROR_CODE | DEVICES_RADIO_ERROR;
 	}

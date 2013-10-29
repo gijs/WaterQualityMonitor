@@ -32,6 +32,14 @@ void setup()
 	{
 		___FDEBUG(WQM_Strings::DEVICE_INITIALIZATION_ERROR);
 		DEBUG_LN((long)result);
+		digitalWrite(RGB_RED_PIN, HIGH);delay(300);
+		digitalWrite(RGB_RED_PIN, LOW);delay(300);
+		digitalWrite(RGB_RED_PIN, HIGH);delay(300);
+		digitalWrite(RGB_RED_PIN, LOW);delay(300);
+		digitalWrite(RGB_RED_PIN, HIGH);delay(300);
+		digitalWrite(RGB_RED_PIN, LOW);
+		while(true){}
+
 	}
 
 	___FDEBUG(WQM_Strings::RADIO_ADDRESS);
@@ -43,12 +51,76 @@ void setup()
 	___FDEBUG(WQM_Strings::SPACE);___FDEBUG(WQM_Strings::ZEROX_HEX_PREFIX);
 	DEBUG_LN_(Devices::SL, HEX);
 
+	___FDEBUG(WQM_Strings::CURRENT_TIME);
 	Devices::displayDate(RTC.get(), DEBUG_STREAM);
-	time_t reference = previousMidnight(RTC.get()) + (SECS_PER_HOUR * 12UL);
+
+
+
+	pinMode(RADIO_POWER_PIN, OUTPUT);
+    PORTD |= 0x04;
+    DDRD &=~ 0x04;
+
+	digitalWrite(RGB_GREEN_PIN, HIGH);delay(300);
+	digitalWrite(RGB_GREEN_PIN, LOW);delay(300);
+	digitalWrite(RGB_GREEN_PIN, HIGH);delay(300);
+	digitalWrite(RGB_GREEN_PIN, LOW);delay(300);
+	digitalWrite(RGB_GREEN_PIN, HIGH);delay(300);
+	digitalWrite(RGB_GREEN_PIN, LOW);delay(300);
 }
 
 void loop()
 {
+	detachInterrupt(0);
+	digitalWrite(RGB_BLUE_PIN, HIGH); //LED Warning Light
+	handle();
+	digitalWrite(RGB_BLUE_PIN, LOW);
+
+
+	//////////////////////////////////////////////////////////////////////////////
+	___FDEBUG(WQM_Strings::CURRENT_TIME);
+	Devices::displayDate(RTC.get(), DEBUG_STREAM);
+	tmElements_t alarm;
+	time_t _wakeup_at = wakeup_at();
+	___FDEBUG(WQM_Strings::WAKE_UP_AT);
+	Devices::displayDate(_wakeup_at, DEBUG_STREAM);
+	breakTime(_wakeup_at, alarm);
+
+	RTC.clearAlarmFlag(3);
+	attachInterrupt(0, INT0_ISR, FALLING);
+
+    RTC.writeAlarm(1, alarmModeDateMatch, alarm);
+
+	//Power Down routines
+    cli();
+    sleep_enable();      // Set sleep enable bit
+    sleep_bod_disable(); // Disable brown out detection during sleep. Saves more power
+    sei();
+
+    ___FDEBUG_LN(WQM_Strings::SLEEPING);
+    delay(30); //This delay is required to allow print to complete
+    //Shut down all peripherals like ADC before sleep. Refer Atmega328 manual
+    power_all_disable(); //This shuts down ADC, TWI, SPI, Timers and USART
+    sleep_cpu();         // Sleep the CPU as per the mode set earlier(power down)
+    sleep_disable();     // Wakes up sleep and clears enable bit. Before this ISR would have executed
+    power_all_enable();  //This shuts enables ADC, TWI, SPI, Timers and USART
+    delay(10); //This delay is required to allow CPU to stabilize
+    ___FDEBUG_LN(WQM_Strings::WOKEN);
+    Devices::displayDate(RTC.get(), DEBUG_STREAM);
+
+
+}
+
+time_t wakeup_at()
+{
+	return nextMidnight(RTC.get()) + (SECS_PER_HOUR * 12UL) - (RADIO_RECEIVE_SECONDS / 2 );
+}
+
+void handle()
+{
+	digitalWrite(RADIO_POWER_PIN, HIGH);
+	XBeeUtil::associate(Devices::xbee);
+	time_t start = RTC.get();
+	while(RTC.get() - start < RADIO_RECEIVE_SECONDS){
 	if(Devices::xbee->readPacket(5000))
 	{
 		DEBUG_LN();
@@ -61,6 +133,7 @@ void loop()
 			ZBRxResponse request;
 			Devices::xbee->getResponse().getRx64Response(request);
 			handle_rx_request(request);
+			start = RTC.get();
 		}
 			break;
 		default:
@@ -79,8 +152,10 @@ void loop()
 		}
 		___FDEBUG(WQM_Strings::DOT);
 	}
-
+	}
+	digitalWrite(RADIO_POWER_PIN, LOW);
 }
+
 
 void handle_rx_request(ZBRxResponse &request)
 {
@@ -174,4 +249,11 @@ void handle_data_request(ZBRxResponse &request)
 //		DEBUG_LN("Incorrect data size for DataPacket");
 		___FDEBUG_LN(WQM_Strings::INCORRECT_DATA_SZIE);
 	}
+}
+
+void INT0_ISR()
+{
+	DEBUG_STREAM->println("INT0");
+
+
 }

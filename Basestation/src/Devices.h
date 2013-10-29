@@ -30,6 +30,12 @@
 #include "RecordStorage.h"
 #include "Records.h"
 
+#define RGB_RED_PIN A0
+#define RGB_GREEN_PIN A1
+#define RGB_BLUE_PIN A2
+
+#define RADIO_POWER_PIN 5
+
 #define DEVICES_SD_ERROR 1
 #define DEVICES_RTC_ERROR 2
 #define DEVICES_RADIO_ERROR 4

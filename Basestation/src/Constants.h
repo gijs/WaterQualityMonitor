@@ -52,6 +52,8 @@
 
 namespace WQM_Strings{
 	const prog_char STARTING[] PROGMEM  = {"Starting.."};
+	const prog_char SLEEPING[] PROGMEM  = {"Sleeping."};
+	const prog_char WOKEN[] PROGMEM  = {"Awake from sleep."};
 	const prog_char DEVICE_INITIALIZATION_ERROR[] PROGMEM  = {"Device initialization error: "};
 	const prog_char RECIEVED_PACKET[] PROGMEM  = {"Received Packet: "};
 	const prog_char UNKNOWN_API_TYPE[] PROGMEM  = {"Unknown API type"};
@@ -72,6 +74,9 @@ namespace WQM_Strings{
 	const prog_char INCORRECT_DATA_SZIE[] PROGMEM  = {"Incorrect data size for DataPacket"};
 	const prog_char INITIALIZING_DEVICES[] PROGMEM  = {"Initializing devices."};
 	const prog_char SD_INITIALIZED[] PROGMEM  = {"SD Initialized."};
+
+	const prog_char CURRENT_TIME[] PROGMEM  = {"Current time: "};
+	const prog_char WAKE_UP_AT[] PROGMEM  = {"Waking up at: "};
 
 	const prog_char DOT[] PROGMEM  = {"."};
 	const prog_char SLASH[] PROGMEM  = {"/"};
