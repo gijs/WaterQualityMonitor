@@ -84,7 +84,11 @@ void RecordStorage::readHeader() {
 	open();
 	if (store) {
 		store.seek(0);
-		header = (RecordHeader*) calloc(sizeof(RecordHeader), 1);
+		if(header == NULL)
+		{
+			header = (RecordHeader*) calloc(sizeof(RecordHeader), 1);
+		}
+
 		store.read(header, sizeof(RecordHeader));
 		if (header->magicNumber != (HEADER_MAGIC_NUMBER)) {
 			free(header);
