@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Water Quality Monitor Java Basestation
+Copyright (C) 2013  nigelb
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+
+    <context:annotation-config />
+    <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
+
+
+
+    <bean id="wqmConfig" class="wqm.web.bean.ConfigBean"/>
+
+    <bean id="stationData" class="wqm.radio.FileSystemDataHandler">
+        <constructor-arg  value="#{wqmConfig.config}"/>
+    </bean>
+
+
+    <bean id="stations" class="wqm.radio.Stations">
+        <constructor-arg  value="#{wqmConfig.config}"/>
+        <constructor-arg>
+            <util:list>
+                <ref bean="stationData"/>
+            </util:list>
+        </constructor-arg>
+    </bean>
+
+    <bean class="wqm.web.server.controller.WQMEndpoint">
+        <constructor-arg  ref="stations"/>
+        <constructor-arg  value="#{wqmConfig.config}"/>
+        <constructor-arg  ref="stationData"/>
+    </bean>
+
+    <bean class="wqm.web.server.controller.WQMController">
+        <constructor-arg  ref="stations"/>
+        <constructor-arg  value="#{wqmConfig.config}"/>
+    </bean>
+
+    <!--Views-->
+
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+
+        <property name="mediaTypes">
+            <map>
+                <!--<entry key="html" value="text/html"/>-->
+                <entry key="json" value="application/json"/>
+            </map>
+        </property>
+
+        <property name="viewResolvers">
+            <list>
+                <bean class="org.springframework.web.servlet.view.BeanNameViewResolver"/>
+                <bean class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+                <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+                <property name="prefix" value="/views/"/>
+                <property name="suffix" value=".jsp"/>
+                </bean>
+
+            </list>
+        </property>
+
+        <property name="defaultViews">
+            <list>
+                <bean class="org.springframework.web.servlet.view.json.MappingJacksonJsonView">
+                    <property name="extractValueFromSingleKeyModel" value="true"/>
+                </bean>
+            </list>
+        </property>
+        <property name="favorPathExtension" value="true"/>
+        <!--<property name="ignoreAcceptHeader"  value="true"/>-->
+
+    </bean>
+
+
+</beans>

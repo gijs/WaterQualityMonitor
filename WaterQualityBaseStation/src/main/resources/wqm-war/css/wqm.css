@@ -1,0 +1,113 @@
+/*
+ * Water Quality Monitor Java Basestation
+ * Copyright (C) 2013  nigelb
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+.my_content, #calibrate_content, #ph_warning, #ph_instructions, #messages, #rename_content
+{
+    margin-left:20px;
+}
+
+#calibrate_content
+{
+
+}
+#ph_warning
+{
+    visibility: hidden;
+    margin-left:20px;
+}
+#ph_instructions
+{
+    visibility: hidden;
+    margin-left:20px;
+}
+
+#messages
+{
+    margin-left:20px;
+}
+
+#error_message
+{
+    text-align: center;
+    background-color: #f8b9b7;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    width: 300px;
+    height: 20px;
+    font-weight: bold;
+    font-size: larger;
+    margin: 50px;
+    padding: 10px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(5, 5, 5, 0.6);
+
+}
+
+#success_message
+{
+    text-align: center;
+    background-color: #62c462;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    width: 300px;
+    height: 20px;
+    font-weight: bold;
+    font-size: larger;
+    margin: 50px;
+    padding: 10px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(102, 175, 233, 0.6);
+
+}
+
+#warning_message
+{
+    text-align: center;
+    background-color: #fcefa1;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    width: 300px;
+    height: 20px;
+    font-weight: bold;
+    font-size: larger;
+    margin: 50px;
+    padding: 10px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(102, 175, 233, 0.6);
+}
+
+.form-input
+{
+    background-color: #FFFFFF;
+    background-image: none;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px 4px 4px 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    color: #555555;
+    display: block;
+    font-size: 14px;
+    height: 34px;
+    line-height: 1.42857;
+    padding: 6px 12px;
+    transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+    vertical-align: middle;
+}
+
+.form-input:focus {
+    border-color: #66AFE9;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(102, 175, 233, 0.6);
+    outline: 0 none;
+}

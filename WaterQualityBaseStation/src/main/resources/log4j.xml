@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+Water Quality Monitor Java Basestation
+Copyright (C) 2013  nigelb
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+-->
+
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+    <appender name="STDOUT" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                   value="[%t:%-6p ] %d{dd MMM yyyy HH:mm:ss,SSS} at %C.%M(%F:%L) - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="FILELOG" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="swoop.log"/>
+        <param name="datePattern" value="'.'yyyy-MM"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                   value="[%t:%-6p ] %d{dd MMM yyyy HH:mm:ss,SSS} at %C.%M(%F:%L) - %m%n"/>
+        </layout>
+    </appender>
+
+
+    <category name="org.eclipse.jetty" additivity="false">
+        <priority value="trace" />
+        <appender-ref ref="STDOUT"/>
+    </category>
+
+    <category name="jndi" additivity="false">
+        <priority value="trace" />
+        <appender-ref ref="STDOUT"/>
+    </category>
+
+    <category name="com.rapplogic.xbee" additivity="false">
+        <priority value="error" />
+        <appender-ref ref="STDOUT"/>
+    </category>
+
+    <category name="wqm" additivity="false">
+        <priority value="trace" />
+        <appender-ref ref="STDOUT"/>
+    </category>
+
+    <root>
+        <priority value="error"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+
+</log4j:configuration>
