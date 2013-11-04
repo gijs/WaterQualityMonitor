@@ -74,4 +74,11 @@ public class FloatRecord extends BaseRecord{
                 exponent, getValue());
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public Date getDate() {
+        return date;
+    }
 }

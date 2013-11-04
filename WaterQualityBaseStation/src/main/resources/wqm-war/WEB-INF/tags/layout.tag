@@ -38,6 +38,7 @@
     <div class="navbar-inner">
         <a class="brand" href="/">Water Quality Monitor</a>
         <ul class="nav">
+            <li><a href="/WQMData">Data</a></li>
             <li><a href="/wqm/c">Calibrate</a></li>
         </ul>
     </div>

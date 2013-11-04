@@ -67,4 +67,12 @@ public class OneWireRecord extends BaseRecord {
     public String toString() {
         return String.format("OneWireRecord{ id=%s, timestamp=%d, date=%s, characteristic=%d, exponent=%d, value=%s}", Util.toHexString(id), time_stamp, date, characteristic, exponent, getValue());
     }
+
+    public int[] getId() {
+        return id;
+    }
+
+    public Date getDate() {
+        return date;
+    }
 }

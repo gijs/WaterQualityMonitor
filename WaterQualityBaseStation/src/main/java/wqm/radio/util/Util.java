@@ -125,6 +125,19 @@ public class Util {
         return buf.toString();
     }
 
+    public static String toCompactHexString(int[] data) {
+        StringBuilder buf = new StringBuilder();
+        buf.append("0x");
+        for (int i : data) {
+            String s = Integer.toHexString(i);
+            if (s.length() == 1) {
+                buf.append("0");
+            }
+            buf.append(s);
+        }
+        return buf.toString();
+    }
+
     public static Date createDate(long time_stamp)
     {
         Date _date = new Date(time_stamp * 1000);

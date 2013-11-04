@@ -78,6 +78,7 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
         long remainder = currentTime % rotatePeriod;
         SimpleDateFormat fmt = new SimpleDateFormat("yyyyy_MMMMM_dd_HH-mm-ss");
         String prefix = fmt.format(new Date(currentTime - remainder));
+
         for (BaseRecord rec : packet.getRecords()) {
             if(dumpers.containsKey(rec.getRecord_type()))
             {
@@ -86,7 +87,6 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
                 } catch (IOException e) {
                     logger.error("Error writing data:", e);
                 }
-                return true;
             }else
             {
 
@@ -94,7 +94,7 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
             }
 
         }
-        return false;
+        return true;
     }
 
     public int getPacketId() {

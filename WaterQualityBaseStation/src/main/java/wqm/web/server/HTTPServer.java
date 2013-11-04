@@ -31,6 +31,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import wqm.constants.ResourceMarkers;
 
 import javax.naming.NamingException;
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -50,7 +51,8 @@ public class HTTPServer {
     public HTTPServer(WQMConfig config) throws IOException, URISyntaxException, NamingException {
 
         base =  new ResourceCollection(
-                Resource.newResource(new URL(HTTPServer.class.getResource("/"+ ResourceMarkers.CONFIG_LOCATOR).toExternalForm().replace(ResourceMarkers.CONFIG_LOCATOR, "wqm-war/")))
+                Resource.newResource(new URL(HTTPServer.class.getResource("/"+ ResourceMarkers.CONFIG_LOCATOR).toExternalForm().replace(ResourceMarkers.CONFIG_LOCATOR, "wqm-war/"))),
+                Resource.newResource(new File(config.getDataConfig().getDataOutputDirectory()))
         );
 
         jetty = new Server();
