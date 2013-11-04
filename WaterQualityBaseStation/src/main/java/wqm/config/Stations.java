@@ -34,7 +34,7 @@ import java.util.List;
  *
  * @author NigelB
  */
-@XmlRootElement(name="Stations")
+@XmlRootElement(name="StationManager")
 public class Stations {
     private static Logger logger = Logger.getLogger(Stations.class);
     private List<Station> stations = new ArrayList<Station>();

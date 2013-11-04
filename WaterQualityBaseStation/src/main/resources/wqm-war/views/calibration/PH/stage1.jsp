@@ -30,8 +30,9 @@
 
     <jsp:body>
         <div id="calibrate_content" class="span5">
-            <H1>${station.getCommonName()} PH Calibration - <span class="ph7">PH 7</span></H1>
-            First place you pH Sensor in the yellow <span class="ph7">pH 7</span> calibration solution.
+            <H1>${station.getCommonName()} PH Calibration - <span class="ph4">PH 4</span></H1>
+            Rinse off pH sensor, dry with paper towel.
+            Place you pH Sensor in the red <span class="ph4">pH 4</span> calibration solution.
             Wait one to two minutes and when the graph has stabilized press the accept button below, or you can press quit to exit calibration mode.
             <div id="ph_graph"></div>
             <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/accept"><button class="btn btn-default" type="submit">Accept</button></form>

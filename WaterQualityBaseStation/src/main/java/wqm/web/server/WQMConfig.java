@@ -22,10 +22,7 @@ package wqm.web.server;
 import com.rapplogic.xbee.api.XBeeAddress64;
 import org.apache.log4j.Logger;
 import wqm.JAXBHelper;
-import wqm.config.ConfigFiles;
-import wqm.config.RadioConfig;
-import wqm.config.Station;
-import wqm.config.Stations;
+import wqm.config.*;
 import wqm.web.exceptions.InvalidRadioException;
 
 import javax.xml.bind.JAXBContext;
@@ -47,14 +44,16 @@ public class WQMConfig {
     private int port;
     private String configDir;
 
+
     private JAXBContext ctx;
 
     private Stations stations = null;
     private RadioConfig radioConfig = null;
     private Runnable shutdownCallback;
+    private DataOutConfig dataConfig;
 
     public WQMConfig() throws JAXBException {
-        ctx = JAXBContext.newInstance(Stations.class, RadioConfig.class);
+        ctx = JAXBContext.newInstance(Stations.class, RadioConfig.class, WQMConfiguration.class);
 
     }
 
@@ -88,11 +87,13 @@ public class WQMConfig {
             stations = new Stations();
         }
 
-        File radios = new File(configDir, ConfigFiles.Radios.getFileName());
-        if (radios.exists()) {
-            radioConfig = (RadioConfig) ctx.createUnmarshaller().unmarshal(radios);
+        File wqmConfig = new File(configDir, ConfigFiles.WQMConfig.getFileName());
+        if (wqmConfig.exists()) {
+            WQMConfiguration cfg = (WQMConfiguration) ctx.createUnmarshaller().unmarshal(wqmConfig);
+            radioConfig = cfg.getRadios();
+            dataConfig = cfg.getData();
         } else {
-            throw new InvalidRadioException("The file " + radios + " does not exist.");
+            throw new InvalidRadioException("The file " + wqmConfig + " does not exist.");
         }
     }
 
@@ -148,5 +149,9 @@ public class WQMConfig {
         return stations.getStation(station);
         }
         return null;
+    }
+
+    public DataOutConfig getDataConfig() {
+        return dataConfig;
     }
 }

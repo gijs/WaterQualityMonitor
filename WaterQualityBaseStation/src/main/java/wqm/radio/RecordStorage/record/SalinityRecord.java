@@ -19,7 +19,7 @@
 
 package wqm.radio.RecordStorage.record;
 
-import wqm.radio.Util;
+import wqm.radio.util.Util;
 
 import java.util.Date;
 
@@ -59,5 +59,25 @@ public class SalinityRecord extends BaseRecord{
     @Override
     public String toString() {
         return String.format("SalinityRecord{ id=%d, timestamp=%d, date=%s, us=%d, ppm=%d, salinity=%d}", id, time_stamp, date, us, ppm, salinity);
+    }
+
+    public int getUs() {
+        return us;
+    }
+
+    public int getPpm() {
+        return ppm;
+    }
+
+    public int getSalinity() {
+        return salinity;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public int getId() {
+        return id;
     }
 }

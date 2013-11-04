@@ -27,19 +27,22 @@ package wqm.config;
  */
 public enum AtlasSensor {
 
-    PH("PH"),
-    DO("Dissolved Oxygen"),
-    ORP("Oxidation Reduction Potential"),
-    EC("Electrical Conductivity");
+    PH("PH", 3),
+    DO("Dissolved Oxygen", 1),
+    ORP("Oxidation Reduction Potential", 1),
+    EC("Electrical Conductivity", 1);
 
     private int id;
     private String longName;
+    private int calibrationPhases;
 
-    AtlasSensor(String longName) {
+    AtlasSensor(String longName, int calibrationPhases) {
         this.longName = longName;
+        this.calibrationPhases = calibrationPhases;
         id = Count.count++;
 
     }
+
 
     private static class Count {
         static int count = 0;
@@ -62,6 +65,10 @@ public enum AtlasSensor {
             }
         }
         return null;
+    }
+
+    public int getCalibrationPhases() {
+        return calibrationPhases;
     }
 
     //    public static

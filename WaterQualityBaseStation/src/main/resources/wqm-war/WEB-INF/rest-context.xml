@@ -42,7 +42,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </bean>
 
 
-    <bean id="stations" class="wqm.radio.Stations">
+    <bean id="stations" class="wqm.radio.StationManager">
         <constructor-arg  value="#{wqmConfig.config}"/>
         <constructor-arg>
             <util:list>
@@ -51,13 +51,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </constructor-arg>
     </bean>
 
-    <bean class="wqm.web.server.controller.WQMEndpoint">
+    <bean class="wqm.web.server.controller.WQMDataController">
         <constructor-arg  ref="stations"/>
         <constructor-arg  value="#{wqmConfig.config}"/>
         <constructor-arg  ref="stationData"/>
     </bean>
 
-    <bean class="wqm.web.server.controller.WQMController">
+    <bean class="wqm.web.server.controller.WQMCalibrationController">
+        <constructor-arg  ref="stations"/>
+        <constructor-arg  value="#{wqmConfig.config}"/>
+    </bean>
+
+    <bean class="wqm.web.server.controller.WQMMonitorController">
         <constructor-arg  ref="stations"/>
         <constructor-arg  value="#{wqmConfig.config}"/>
     </bean>

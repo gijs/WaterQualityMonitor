@@ -21,23 +21,28 @@ package wqm.radio;
 
 import com.rapplogic.xbee.api.*;
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
+import com.rapplogic.xbee.api.zigbee.ZNetTxRequest;
 import org.apache.log4j.Logger;
 import wqm.PluginManager;
 import wqm.config.Port;
 import wqm.config.Station;
-import wqm.radio.SensorLink.handlers.DataUploadHandler;
-import wqm.radio.SensorLink.handlers.PacketHandler;
 import wqm.radio.SensorLink.PacketHandlerContext;
-import wqm.radio.SensorLink.packets.DataUpload;
+import wqm.radio.SensorLink.handlers.PacketHandler;
+import wqm.radio.SensorLink.packets.CalibratePacket;
 import wqm.radio.SensorLink.packets.SensorLinkPacket;
 import wqm.radio.SensorLink.packets.SinkSearch;
+import wqm.radio.util.AddressUtil;
+import wqm.radio.util.Util;
 import wqm.web.server.WQMConfig;
 
 import javax.naming.NamingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static wqm.radio.Util.getInt;
+import static wqm.radio.util.Util.getInt;
 
 /**
  * Date: 10/21/13
@@ -55,8 +60,10 @@ public class BaseStation implements PacketListener {
     private XBee xbee = new XBee();
 
     private PacketHandlerContext ctx = new PacketHandlerContext();
-    private Hashtable<Integer, PacketHandler> packetHandlers = new Hashtable<Integer, PacketHandler>();
+    private Hashtable<Integer, List<PacketHandler>> packetHandlers = new Hashtable<Integer, List<PacketHandler>>();
     private Hashtable<XBeeAddress64, String> addresses = new Hashtable<XBeeAddress64, String>();
+    private Hashtable<String, XBeeAddress64> seenStations = new Hashtable<String, XBeeAddress64>();
+
 
     private volatile boolean running = true;
 
@@ -83,16 +90,21 @@ public class BaseStation implements PacketListener {
 
         List<PacketHandler> _handlers = PluginManager.<PacketHandler>getPlugins(PacketHandler.class, null);
         for (PacketHandler handler : _handlers) {
-            packetHandlers.put(handler.getPacketId(), handler);
+            registerPacketHandler(handler);
+        }
+//        packetHandlers.put(calHandler.getPacketId(), calHandler);
+
+//        List<DataUploadHandler> hdl = (DataUploadHandler) packetHandlers.get(DataUpload.PACKET_ID);
+//        for (PacketHandler handler : handlers) {
+//            hdl.registerHandler(handler);
+//        }
+        for (PacketHandler handler : handlers) {
+            registerPacketHandler(handler);
         }
 
-        DataUploadHandler hdl = (DataUploadHandler) packetHandlers.get(DataUpload.PACKET_ID);
-        for (PacketHandler handler : handlers) {
-            hdl.registerHandler(handler);
-        }
 
         for (Station station : config.getStations()) {
-            addresses.put(station.getAddress(), station.getCommonName() == null? "": station.getCommonName());
+            addresses.put(station.getAddress(), station.getCommonName() == null ? "" : station.getCommonName());
         }
     }
 
@@ -101,6 +113,7 @@ public class BaseStation implements PacketListener {
         LinkedBlockingQueue<TimedPacket> queue = ctx.getQueue();
         ArrayList<TimedPacket> toSend = new ArrayList<TimedPacket>();
         while (running) {
+
             while (running) {
                 TimedPacket a = queue.poll();
                 if (a != null) {
@@ -117,22 +130,29 @@ public class BaseStation implements PacketListener {
                 XBeeResponse response;
                 boolean success = false;
                 for (int i = 0; i < retries; i++) {
-                    response = xbee.sendSynchronous(packet.packet);
-                    if (!response.isError()) {
-                        success = true;
-                        break;
-                    }
                     try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException wakeup) {
-                        logger.debug("Interrupted during retry.");
+                        logger.info("Attempt: "+i+", "+packet.packet);
+
+                        response = xbee.sendSynchronous(packet.packet);
+
+                        if (!response.isError()) {
+                            success = true;
+                            i = retries + 1;
+                        }
+
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException wakeup) {
+                            logger.debug("Interrupted during retry.");
+                        }
+                    } catch (XBeeTimeoutException xe) {
+                        logger.error("XBee exception", xe);
+                        Thread.sleep(200);
+                    }
+                    if (success) {
+                        toSend.remove(0);
                     }
                 }
-                if(success)
-                {
-                    toSend.remove(0);
-                }
-
             }
             try {
                 Thread.sleep(10);
@@ -149,23 +169,27 @@ public class BaseStation implements PacketListener {
         if (xBeeResponse.getApiId().getValue() == 0x90) {
             ZNetRxResponse res = (ZNetRxResponse) xBeeResponse;
             XBeeAddress64 addr = res.getRemoteAddress64();
-            if(!addresses.containsKey(addr))
-            {
+            seenStations.put(AddressUtil.getCompactStringAddress(addr), addr);
+            if (!addresses.containsKey(addr)) {
                 config.addStation(addr);
                 addresses.put(addr, "");
                 logger.warn(String.format("Added station: %s", addr));
             }
-            try{
-            SensorLinkPacket packet = SensorLinkPacket.constructPacket(res.getData(), time);
-            if(packetHandlers.containsKey(packet.getPacketID()))
-            {
-                packetHandlers.get(packet.getPacketID()).handlePacket(ctx, res, packet);
-            }else
-            {
-                logger.error(String.format("Could not find handler for packet: %s", packet));
-            }
-            }catch (Throwable e)
-            {
+            try {
+                SensorLinkPacket packet = SensorLinkPacket.constructPacket(res.getData(), time);
+                if (packet != null) {
+                    if (packetHandlers.containsKey(packet.getPacketID())) {
+                        List<PacketHandler> handlers = packetHandlers.get(packet.getPacketID());
+                        for (PacketHandler handler : handlers) {
+                            handler.handlePacket(ctx, res, packet);
+                        }
+                    } else {
+                        logger.error(String.format("Could not find handler for packet: %s", packet));
+                    }
+                } else {
+                    logger.error(String.format("Could not construct a packet from data: %s", Util.toHexString(packet.getData())));
+                }
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
 
@@ -174,9 +198,37 @@ public class BaseStation implements PacketListener {
         }
     }
 
-    public void shutDown()
-    {
+    public boolean hasStation(String stationAddress) {
+        return seenStations.get(stationAddress) != null;
+    }
+
+    public void shutDown() {
         running = false;
         xbee.close();
+    }
+
+    public boolean sendCalibrationPacket(String stationAddress, CalibratePacket packet) {
+        logger.trace("Calibrateion Packet: " + Util.toHexString(packet.getData()));
+        if (hasStation(stationAddress)) {
+            XBeeAddress64 address = seenStations.get(stationAddress);
+            logger.info(address);
+            ZNetTxRequest tx = new ZNetTxRequest(address, packet.getData());
+            try {
+                ctx.getQueue().put(new TimedPacket(tx, System.currentTimeMillis()));
+                logger.trace(tx);
+            } catch (InterruptedException e) {
+                logger.error("Error adding packet to queue", e);
+            }
+        }
+        return true;
+    }
+
+    public void registerPacketHandler(PacketHandler hndl) {
+        List<PacketHandler> handlers = packetHandlers.get(hndl.getPacketId());
+        if (handlers == null) {
+            handlers = new ArrayList<PacketHandler>();
+            packetHandlers.put(hndl.getPacketId(), handlers);
+        }
+        handlers.add(hndl);
     }
 }

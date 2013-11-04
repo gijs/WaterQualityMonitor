@@ -29,8 +29,9 @@ import org.springframework.web.servlet.ModelAndView;
 import wqm.config.AtlasSensor;
 import wqm.config.Messages;
 import wqm.config.Station;
-import wqm.radio.Stations;
+import wqm.radio.StationManager;
 import wqm.web.exceptions.AlreadyHaveLockOnAnotherSensor;
+import wqm.web.exceptions.AlreadyRunningAnotherCalibrationPhase;
 import wqm.web.exceptions.RedirectException;
 import wqm.web.server.WQMConfig;
 
@@ -46,15 +47,11 @@ import java.io.IOException;
  * @author NigelB
  */
 @Controller
-public class WQMController {
-    private static Logger logger = Logger.getLogger(WQMEndpoint.class);
-    private final Stations stations;
-    private final WQMConfig config;
+public class WQMCalibrationController extends BaseWQMController {
+    private static Logger logger = Logger.getLogger(WQMDataController.class);
 
-
-    public WQMController(Stations stations, WQMConfig config) {
-        this.stations = stations;
-        this.config = config;
+    public WQMCalibrationController(StationManager stationManager, WQMConfig config) {
+        super(stationManager, config);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/shutdown")
@@ -92,7 +89,7 @@ public class WQMController {
             _view.addObject("sensor", s);
         }
 
-        _view.addObject("stations", stations.getStations());
+        _view.addObject("stations", stationManager.getBaseStations());
         _view.addObject("calibrate_sensors", AtlasSensor.values());
         _view.addObject("station", config.getStation(station));
 
@@ -107,13 +104,13 @@ public class WQMController {
     @RequestMapping(method = RequestMethod.GET, value = "/c")
     public ModelAndView selectStationForCalibration(HttpServletRequest request) {
         ModelAndView view = new ModelAndView("calibration/station");
-        view.addObject("stations", config.getStations());
         addCommonParams(view, request);
         return view;
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/c/{stationAddress}")
-    public ModelAndView selectStationForCalibration(HttpServletRequest request, @PathVariable String stationAddress) throws IOException {
+    public ModelAndView selectStationForCalibration(HttpServletRequest request,
+                                                    @PathVariable String stationAddress) throws IOException {
 
         Station station = lockStation(request, stationAddress);
         ModelAndView view = new ModelAndView("calibration/sensor");
@@ -124,7 +121,9 @@ public class WQMController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/c/{stationAddress}/{sensorID}")
-    public ModelAndView selectSensorForCalibration(HttpServletRequest request, HttpServletResponse response, @PathVariable String stationAddress, @PathVariable int sensorID) throws IOException {
+    public ModelAndView selectSensorForCalibration(HttpServletRequest request, HttpServletResponse response,
+                                                   @PathVariable String stationAddress,
+                                                   @PathVariable int sensorID) throws IOException {
         Station station = lockStation(request, stationAddress);
         AtlasSensor sensor = lockSensor(request, stationAddress, sensorID);
 
@@ -135,9 +134,90 @@ public class WQMController {
         return view;
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/r/{stationAddress}")
+    @RequestMapping(method = RequestMethod.GET, value = "/c/{stationAddress}/{sensorID}/{phaseID}")
+    public ModelAndView conductPhase(HttpServletRequest request, HttpServletResponse response,
+                                     @PathVariable String stationAddress,
+                                     @PathVariable int sensorID,
+                                     @PathVariable int phaseID) throws IOException {
+        Station station = lockStation(request, stationAddress);
+        AtlasSensor sensor = lockSensor(request, stationAddress, sensorID);
 
-    public ModelAndView renameStation(HttpServletRequest request, HttpServletResponse response, @PathVariable String stationAddress) throws IOException {
+        try {
+            logger.error(stationManager.startCalibrationPhase(request.getSession(true), station, sensor, phaseID));
+        } catch (AlreadyRunningAnotherCalibrationPhase pe) {
+            logger.error(pe);
+        }
+
+        ModelAndView view = new ModelAndView(String.format("calibration/%s/stage%s", sensor.name(), phaseID));
+        view.addObject("station", station);
+        view.addObject("sensor", sensor);
+        view.addObject("phase", phaseID);
+        addCommonParams(view, request);
+        return view;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/d/{stationAddress}/{sensorID}/{phaseID}")
+    public ModelAndView calibrationData(HttpServletRequest request, HttpServletResponse response,
+                                     @PathVariable String stationAddress,
+                                     @PathVariable int sensorID,
+                                     @PathVariable int phaseID) throws IOException {
+        Station station = lockStation(request, stationAddress);
+        AtlasSensor sensor = lockSensor(request, stationAddress, sensorID);
+        int offset = 0;
+        if(request.getParameter("offset") != null)
+        {
+            try{
+                offset = Integer.parseInt(request.getParameter("offset"));
+            }catch(Throwable t)
+            {
+                logger.error("Could not parse offset: "+request.getParameter("offset"));
+            }
+        }
+
+        return new ModelAndView("","", stationManager.getCalibrationData(request.getSession(true), station, sensor, phaseID, offset));
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/c/{stationAddress}/{sensorID}/{phaseID}/{command}")
+    public ModelAndView conductPhase(HttpServletRequest request, HttpServletResponse response,
+                                     @PathVariable String stationAddress,
+                                     @PathVariable int sensorID,
+                                     @PathVariable int phaseID,
+                                     @PathVariable String command) throws IOException {
+        Station station = lockStation(request, stationAddress);
+        AtlasSensor sensor = lockSensor(request, stationAddress, sensorID);
+
+        String name = "";
+        if(command.equalsIgnoreCase("accept"))
+        {
+            stationManager.acceptCalibrationPhase(request.getSession(true), station, sensor, phaseID);
+            if((phaseID + 1) >= sensor.getCalibrationPhases())
+            {
+                //We have finished all the phases of calibration for this sensor.
+                stationManager.quitCalibrationPhase(request.getSession(true), station, sensor);
+                request.getSession(true).setAttribute(Messages.SUCCESS_MESSAGE, "PH Sensor calibrated.");
+
+                throw new RedirectException("/");
+            }else{
+                throw new RedirectException(String.format("/wqm/c/%s/%d/%d", stationAddress, sensorID, phaseID + 1));
+            }
+        }else if(command.equalsIgnoreCase("quit"))
+        {
+            stationManager.quitCalibrationPhase(request.getSession(true), station, sensor);
+            request.getSession(true).setAttribute(Messages.WARNING_MESSAGE, "Calibration has been terminated.");
+            throw new RedirectException("/wqm/c");
+        }
+
+        ModelAndView view = new ModelAndView(name);
+        view.addObject("station", station);
+        view.addObject("sensor", sensor);
+        view.addObject("phase", phaseID);
+        addCommonParams(view, request);
+        return view;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/r/{stationAddress}")
+    public ModelAndView renameStation(HttpServletRequest request, HttpServletResponse response,
+                                      @PathVariable String stationAddress) throws IOException {
         Station station = validateStation(request, stationAddress);
         String name = request.getParameter("name");
 
@@ -156,7 +236,7 @@ public class WQMController {
     private Station lockStation(HttpServletRequest request, String stationAddress) throws IOException {
         Station _station = validateStation(request, stationAddress);
         HttpSession session = request.getSession(true);
-        if (!stations.lockStation(session, stationAddress)) {
+        if (!stationManager.lockStation(session, stationAddress)) {
             session.setAttribute(Messages.ERROR_MESSAGE, String.format("%s is currently being calibrated by somebody else.", _station.getDisplayName()));
             throw new RedirectException(".");
         }
@@ -167,7 +247,7 @@ public class WQMController {
         AtlasSensor sensor = validateSensor(request, sensorID);
         HttpSession session = request.getSession(true);
         try {
-            stations.lockSensor(session, stationAddress, sensorID);
+            stationManager.lockSensor(session, stationAddress, sensorID);
         } catch (AlreadyHaveLockOnAnotherSensor alreadyHaveLockOnAnotherSensor) {
             AtlasSensor s = AtlasSensor.find(alreadyHaveLockOnAnotherSensor.getSensorID());
             session.setAttribute(Messages.WARNING_MESSAGE, "Since you were in the process of calibrating the " + s.getLongName() + " sensor we brought you back.");
@@ -194,19 +274,6 @@ public class WQMController {
             throw new RedirectException(".");
         }
         return _sensor;
-    }
-
-    private void addCommonParams(ModelAndView view, HttpServletRequest request) {
-        HttpSession session = request.getSession(true);
-        view.addObject("stations", stations.getStations());
-        for (String sessionField : Messages.SESSION_FIELDS) {
-            Object val = session.getAttribute(sessionField);
-            logger.error(val);
-            if (val != null) {
-                view.addObject(sessionField, val);
-                session.removeAttribute(sessionField);
-            }
-        }
     }
 
 }

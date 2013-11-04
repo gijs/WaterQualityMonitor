@@ -20,11 +20,27 @@
 package wqm.radio;
 
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
+import org.apache.log4j.Logger;
+import wqm.PluginManager;
+import wqm.data.CsvDataDumper;
+import wqm.radio.RecordStorage.record.BaseRecord;
+import wqm.radio.RecordStorage.record.FloatRecord;
+import wqm.radio.RecordStorage.record.OneWireRecord;
+import wqm.radio.RecordStorage.record.SalinityRecord;
 import wqm.radio.SensorLink.PacketHandlerContext;
 import wqm.radio.SensorLink.handlers.PacketHandler;
 import wqm.radio.SensorLink.packets.DataUpload;
 import wqm.radio.SensorLink.packets.SensorLinkPacket;
+import wqm.radio.util.AddressUtil;
 import wqm.web.server.WQMConfig;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.logging.ErrorManager;
 
 /**
  * Date: 11/2/13
@@ -33,18 +49,56 @@ import wqm.web.server.WQMConfig;
  * @author NigelB
  */
 public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSource {
+    private static Logger logger = Logger.getLogger(FileSystemDataHandler.class);
     private WQMConfig config;
+    private File dataDir;
+    private long rotatePeriod;
+
+    private Hashtable<Integer, CsvDataDumper> dumpers = new Hashtable<Integer, CsvDataDumper>();
+
+    private SimpleDateFormat fmt;
 
     public FileSystemDataHandler(WQMConfig config) {
         this.config = config;
+        dataDir = new File(config.getDataConfig().getDataOutputDirectory(), "WQMData");
+        rotatePeriod = config.getDataConfig().getRotatePeriod();
+        fmt = config.getDataConfig().toFormat();
+        dataDir.mkdirs();
+        List<CsvDataDumper> _handlers = PluginManager.<CsvDataDumper>getPlugins(CsvDataDumper.class, null);
+        for (CsvDataDumper handler : _handlers) {
+            dumpers.put(handler.getPacketType(), handler);
+        }
     }
 
 
     public boolean handlePacket(PacketHandlerContext ctx, ZNetRxResponse xbeeResponse, DataUpload packet) {
+        File outputDir = new File(dataDir, AddressUtil.getCompactStringAddress(xbeeResponse.getRemoteAddress64()));
+        outputDir.mkdirs();
+        long currentTime = System.currentTimeMillis();
+        long remainder = currentTime % rotatePeriod;
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyyy_MMMMM_dd_HH-mm-ss");
+        String prefix = fmt.format(new Date(currentTime - remainder));
+        for (BaseRecord rec : packet.getRecords()) {
+            if(dumpers.containsKey(rec.getRecord_type()))
+            {
+                try{
+                    dumpers.get(rec.getRecord_type()).dumpData(outputDir, prefix, rec);
+                } catch (IOException e) {
+                    logger.error("Error writing data:", e);
+                }
+                return true;
+            }else
+            {
+
+                logger.error(String.format("Cannot find data handler for: %s", rec.toString()));
+            }
+
+        }
         return false;
     }
 
     public int getPacketId() {
         return DataUpload.PACKET_ID;
     }
+
 }

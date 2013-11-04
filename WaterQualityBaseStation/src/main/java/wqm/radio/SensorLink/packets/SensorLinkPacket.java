@@ -58,6 +58,7 @@ public abstract class SensorLinkPacket {
 
     public void setPacket_type(byte packet_type) {
         this.packet_type = packet_type;
+        data[0] = packet_type;
     }
 
     public int getHeader_length() {
@@ -66,6 +67,7 @@ public abstract class SensorLinkPacket {
 
     public void setHeader_length(byte header_length) {
         this.header_length = header_length;
+        data[1] = header_length;
     }
 
     public static SensorLinkPacket constructPacket(int[] data, long receivedTime)
@@ -76,6 +78,10 @@ public abstract class SensorLinkPacket {
                 return new SinkSearch(data);
             case DataUpload.PACKET_ID:
                 return new DataUpload(data);
+            case CalibratePacket.PACKET_ID:
+                return new CalibratePacket(data);
+            case StatusPacket.PACKET_ID:
+                return new StatusPacket(data);
             default:
                 return null;
         }

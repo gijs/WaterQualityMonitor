@@ -26,11 +26,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import wqm.radio.DataSource;
-import wqm.radio.Stations;
+import wqm.radio.StationManager;
 import wqm.web.server.WQMConfig;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.Hashtable;
 
 /**
@@ -40,13 +39,13 @@ import java.util.Hashtable;
  * @author NigelB
  */
 @Controller
-public class WQMEndpoint {
-    private static Logger logger = Logger.getLogger(WQMEndpoint.class);
-    private final Stations stations;
+public class WQMDataController {
+    private static Logger logger = Logger.getLogger(WQMDataController.class);
+    private final StationManager stations;
     private final WQMConfig config;
 
 
-    public WQMEndpoint(Stations stations, WQMConfig config, DataSource source) {
+    public WQMDataController(StationManager stations, WQMConfig config, DataSource source) {
         this.stations = stations;
         this.config = config;
     }

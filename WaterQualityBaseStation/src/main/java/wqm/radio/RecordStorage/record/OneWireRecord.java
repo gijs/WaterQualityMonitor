@@ -19,7 +19,7 @@
 
 package wqm.radio.RecordStorage.record;
 
-import wqm.radio.Util;
+import wqm.radio.util.Util;
 
 import java.util.Date;
 

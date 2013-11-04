@@ -20,10 +20,9 @@
 package wqm.config;
 
 import com.rapplogic.xbee.api.XBeeAddress64;
-import wqm.radio.Util;
+import wqm.radio.util.AddressUtil;
 
 import javax.xml.bind.annotation.*;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * Date: 11/2/13
@@ -65,16 +64,17 @@ public class Station {
 
     @XmlAttribute(name = "Address")
     public String get_Address() {
-        int[] addr = address.getAddress();
-        return String.format("%02X %02X %02X %02X %02X %02X %02X %02X",
-                addr[0],
-                addr[1],
-                addr[2],
-                addr[3],
-                addr[4],
-                addr[5],
-                addr[6],
-                addr[7]);
+        return AddressUtil.getStringAddress(address);
+//        int[] addr = address.getAddress();
+//        return String.format("%02X %02X %02X %02X %02X %02X %02X %02X",
+//                addr[0],
+//                addr[1],
+//                addr[2],
+//                addr[3],
+//                addr[4],
+//                addr[5],
+//                addr[6],
+//                addr[7]);
     }
 
     public void set_Address(String address) {
@@ -83,16 +83,17 @@ public class Station {
 
     public String getCompactAddress()
     {
-        int[] addr = address.getAddress();
-        return String.format("%02X%02X%02X%02X%02X%02X%02X%02X",
-                addr[0],
-                addr[1],
-                addr[2],
-                addr[3],
-                addr[4],
-                addr[5],
-                addr[6],
-                addr[7]);
+        return AddressUtil.getCompactStringAddress(address);
+//        int[] addr = address.getAddress();
+//        return String.format("%02X%02X%02X%02X%02X%02X%02X%02X",
+//                addr[0],
+//                addr[1],
+//                addr[2],
+//                addr[3],
+//                addr[4],
+//                addr[5],
+//                addr[6],
+//                addr[7]);
     }
 
     public XBeeAddress64 getAddress() {

@@ -29,7 +29,7 @@
 
     <jsp:body>
         <div id="calibrate_content" class="span5">
-            <H1>PH</H1>
+            <H1>Electrical Conductivity</H1>
         </div>
     </jsp:body>
 </mytags:layout>

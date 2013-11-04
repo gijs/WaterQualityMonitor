@@ -17,19 +17,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.config;
+package wqm.data;
+
+import wqm.radio.RecordStorage.record.BaseRecord;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
- * Date: 11/3/13
- * Time: 7:05 PM
+ * Date: 11/4/13
+ * Time: 5:30 PM
  *
  * @author NigelB
  */
-public interface Messages {
-    public static final String ERROR_MESSAGE = "error_message";
-    public static final String MESSAGE = "message";
-    public static final String SUCCESS_MESSAGE = "success_message";
-    public static final String WARNING_MESSAGE = "warning_message";
-
-    public static final String[] SESSION_FIELDS = new String[]{ERROR_MESSAGE, MESSAGE, SUCCESS_MESSAGE, WARNING_MESSAGE};
+public interface CsvDataDumper <T extends BaseRecord>{
+    Integer getPacketType();
+    void dumpData(File outputDir, String prefix, T record) throws IOException;
 }

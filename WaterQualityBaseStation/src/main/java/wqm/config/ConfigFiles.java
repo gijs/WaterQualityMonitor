@@ -26,8 +26,9 @@ package wqm.config;
  * @author NigelB
  */
 public enum ConfigFiles {
-    StationMap("Stations.xml"),
-    Radios("Radios.xml");
+    StationMap("StationManager.xml"),
+//    Radios("Radios.xml");
+    WQMConfig("Config.xml");
 
     private String fileName;
 

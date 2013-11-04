@@ -34,7 +34,7 @@
             <h1>Rename station ${station.getDisplayName()}</h1><br/><br/>
         <form role="form">
             Enter the new name of the station:
-            <input class="form-input" id="name" name="name"> <br/>
+            <input class="form-input" id="name" name="name" autofocus="autofocus"> <br/>
             <button class="btn btn-default" type="submit">Submit</button>
         </form>
         </div>

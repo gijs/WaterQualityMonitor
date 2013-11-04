@@ -57,6 +57,7 @@ public class DataUploadHandler implements PacketHandler<DataUpload> {
             handlers.add(handler);
         }else
         {
+            logger.error(handler);
             throw new InvalidPacketHandler(String.format("Expecting packet id: %d got: %d", getPacketId(), handler.getPacketId()));
         }
     }

@@ -23,8 +23,8 @@ import wqm.radio.RecordStorage.record.BaseRecord;
 
 import java.util.ArrayList;
 
-import static wqm.radio.Util.getInt;
-import static wqm.radio.Util.toUnsignedInt;
+import static wqm.radio.util.Util.getInt;
+import static wqm.radio.util.Util.toUnsignedInt;
 
 /**
  * Date: 10/21/13
@@ -76,6 +76,10 @@ public class DataUpload extends SensorLinkPacket {
     @Override
     public int getPacketID() {
         return PACKET_ID;
+    }
+
+    public ArrayList<BaseRecord> getRecords() {
+        return records;
     }
 
     @Override

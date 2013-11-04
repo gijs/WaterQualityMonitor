@@ -17,37 +17,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm;
+package wqm.web.server.controller;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.log4j.Logger;
-import wqm.web.server.HTTPServer;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+import wqm.radio.StationManager;
 import wqm.web.server.WQMConfig;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
- * Date: 10/21/13
- * Time: 2:05 PM
+ * Date: 11/4/13
+ * Time: 7:08 AM
  *
  * @author NigelB
  */
-public class Launch {
-    private static Logger logger = Logger.getLogger(Launch.class);
-    static volatile boolean running = true;
-    public static void main(String[] args) throws Exception {
-        CommandLine cmd = CmdLine.parse("wqm", CmdLine.getOptions(), args);
-        WQMConfig config = CmdLine.createServerConfig(cmd);
-        HTTPServer server = new HTTPServer(config);
-        config.addShutdownCallback(new Runnable() {
-            public void run() {
-                running = false;
-                logger.error("Server Shutdown Called.");
-            }
-        });
-        server.start();
-        while(running)
-        {
-            Thread.sleep(500);
-        }
-        server.stop();
+@Controller
+public class WQMMonitorController extends BaseWQMController {
+
+    public WQMMonitorController(StationManager stationManager, WQMConfig config) {
+        super(stationManager, config);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/m")
+    public ModelAndView monitor(HttpServletRequest request) {
+        ModelAndView view = new ModelAndView("index");
+        addCommonParams(view, request);
+        return view;
     }
 }

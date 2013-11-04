@@ -26,6 +26,7 @@
 {
 
 }
+
 #ph_warning
 {
     visibility: hidden;
@@ -33,7 +34,6 @@
 }
 #ph_instructions
 {
-    visibility: hidden;
     margin-left:20px;
 }
 
@@ -110,4 +110,19 @@
     border-color: #66AFE9;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(102, 175, 233, 0.6);
     outline: 0 none;
+}
+
+.ph7
+{
+    background-color: #ffce37;
+}
+
+.ph4
+{
+    background-color: #ff2d16;
+}
+
+.ph10
+{
+    background-color: #00b8f1;
 }

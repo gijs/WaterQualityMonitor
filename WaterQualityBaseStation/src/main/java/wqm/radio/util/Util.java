@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.radio;
+package wqm.radio.util;
 
 import java.nio.ByteBuffer;
 import java.util.Date;
@@ -57,6 +57,16 @@ public class Util {
         buf.putInt(value);
 
         for (int pos = offset, count = 3; count >= 0; pos++, count--) {
+            data[pos] = _data[count];
+        }
+    }
+
+    public static void putLong(int[] data, int offset, long value) {
+        byte _data[] = new byte[8];
+        ByteBuffer buf = ByteBuffer.wrap(_data);
+        buf.putLong(value);
+
+        for (int pos = offset, count = 7; count >= 0; pos++, count--) {
             data[pos] = _data[count];
         }
     }

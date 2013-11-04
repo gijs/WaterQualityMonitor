@@ -20,7 +20,7 @@
 package wqm.radio.RecordStorage.record;
 
 import org.apache.log4j.Logger;
-import wqm.radio.Util;
+import wqm.radio.util.Util;
 
 /**
  * Date: 10/22/13
@@ -55,5 +55,9 @@ public class BaseRecord {
                 return new SalinityRecord(data);
         }
         return null;
+    }
+
+    public int getRecord_type() {
+        return record_type;
     }
 }

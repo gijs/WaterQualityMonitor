@@ -19,8 +19,8 @@
 
 package wqm.radio.SensorLink.packets;
 
-import static wqm.radio.Util.getInt;
-import static wqm.radio.Util.putInt;
+import static wqm.radio.util.Util.getInt;
+import static wqm.radio.util.Util.putInt;
 
 /**
  * Date: 10/21/13

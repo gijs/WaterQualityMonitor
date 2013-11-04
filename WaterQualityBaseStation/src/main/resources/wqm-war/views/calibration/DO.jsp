@@ -25,11 +25,9 @@
     <%--<script src="/js/experiments.js"></script>--%>
     <%--<link rel="stylesheet" href="/css/commands.css"/>--%>
 </jsp:attribute>
-
-
     <jsp:body>
         <div id="calibrate_content" class="span5">
-            <H1>PH</H1>
+            <H1>Dissolved Oxygen</H1>
         </div>
     </jsp:body>
 </mytags:layout>
