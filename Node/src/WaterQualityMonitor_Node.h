@@ -35,14 +35,25 @@ void setup();
 }
 #endif
 
+#define SAMPLE_MATCH_SECOND 1
+#define SAMPLE_MATCH_MINUTE 2
+#define SAMPLE_MATCH_HOUR 4
+#define SAMPLE_MATCH_DAY 8
+#define SAMPLE_MATCH_WEEKDAY 16
+#define SAMPLE_MATCH_MONTH 32
+#define SAMPLE_MATCH_YEAR 64
 
 void downtime(const char* message);
 void upload();
+void handle_queue();
+void handle_queued_packet(XBeeResponse* packet);
 void sample();
 bool do_upload();
 bool isDataHandled(ZBTxStatusResponse &response);
 time_t wakeup_at();
 void INT0_ISR();
+
+void set_sample_count();
 
 
 

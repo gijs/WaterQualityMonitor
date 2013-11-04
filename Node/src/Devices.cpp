@@ -26,7 +26,7 @@ RecordStorage* Devices::store;
 Atlas* Devices::atlas;
 XBeeSinkAddress* Devices::sink_address;
 list_node<XBeeResponse>* Devices::packet_queue_head = NULL;
-list_node<XBeeResponse>* Devices::packet_queue_tail = NULL;
+//list_node<XBeeResponse>* Devices::packet_queue_tail = NULL;
 
 int32_t Devices::SH;
 int32_t Devices::SL;
@@ -136,6 +136,11 @@ bool Devices::setupXbee(Stream& xbee_stream, uint8_t xbee_associate_pin)
 		return true;
 }
 
+bool Devices::matchSinkPacket()
+{
+
+}
+
 bool Devices::findSink()
 {
 	XBeeSinkAddress address;
@@ -147,11 +152,11 @@ bool Devices::findSink()
 
 	Devices::xbee->send(request);
 
-	if(XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_TX_STATUS_RESPONSE, Devices::queue_packet))
+	if(XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_TX_STATUS_RESPONSE, NULL, Devices::queue_packet))
 	{
 		ZBTxStatusResponse response;
 		Devices::xbee->getResponse(response);
-		if(XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_RX_RESPONSE, Devices::queue_packet))
+		if(XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_RX_RESPONSE, Devices::matchSinkPacket, Devices::queue_packet))
 		{
 			ZBRxResponse request;
 			Devices::xbee->getResponse(request);
@@ -182,48 +187,199 @@ bool Devices::findSink()
 
 }
 
-//bool Devices::wait_for_packet_type(int timeout, int api_id)
-//{
-//
-//	unsigned long end = millis() + timeout;
-//	while(millis() < end)
-//	{
-//		if(Devices::xbee->readPacket(end - millis()) && Devices::xbee->getResponse().getApiId() == api_id)
-//		{
-//			return true;
-//		}else
-//		{
-//			queue_packet();
-//		}
-//	}
-//	return false;
-//}
+bool start_sensor_calibration(CalibratePacket* calibrate_packet, CalibratePacket* outGoing)
+{
+
+	switch (calibrate_packet->sensor) {
+	case PH:
+	{
+		outGoing->sensor = calibrate_packet->sensor;
+		double ph = Devices::atlas->continuousPH(NAN);
+		if (!isnan(ph)) {
+			outGoing->setVal1(ph, 2);
+			return true;
+		}
+	}
+		break;
+	case DO:
+		break;
+	case ORP:
+		break;
+	case EC:
+		break;
+	}
+}
+
+void accept_sensor_calibration(CalibratePacket* calibrate_packet)
+{
+	switch (calibrate_packet->sensor) {
+	case PH:
+	{
+		bool accept = false;
+		PHCalibration val;
+		switch(calibrate_packet->flags & SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION)
+		{
+		case SENSORLINK_CALIBRATION_FLAG_ACCEPT_0:
+			val = Seven;
+			accept = true;
+			break;
+		case SENSORLINK_CALIBRATION_FLAG_ACCEPT_1:
+			val = Four;
+			accept = true;
+			break;
+		case SENSORLINK_CALIBRATION_FLAG_ACCEPT_3:
+			val = Ten;
+			accept = true;
+			break;
+
+		}
+		if(accept)
+		{
+			Devices::atlas->acceptPH(val);
+		}
+	}
+		break;
+	case DO:
+		break;
+	case ORP:
+		break;
+	case EC:
+		break;
+	}
+
+}
+
+void Devices::calibrate(ZBRxResponse* calibrate_request, unsigned long timeout)
+{
+	DEBUG_LN("CALIBRATE");
+	XBeeAddress64 addr64 = XBeeAddress64(Devices::sink_address->DH, Devices::sink_address->DL);
+	CalibratePacket outGoing;
+	outGoing.init();
+
+	CalibratePacket* queued;
+	ZBRxResponse* _queued;
+	ZBTxRequest request(addr64, (byte*)&outGoing, sizeof(CalibratePacket));
+	XBeeResponse* packet;
+
+	unsigned long start = millis();
+	CalibratePacket* calibrate_packet = (CalibratePacket*)calibrate_request->getData();
+	_DEBUG("Flags: ");
+	_DEBUG_LN(calibrate_packet->flags);
+	if((calibrate_packet->flags & SENSORLINK_CALIBRATION_FLAG_START_CALIBRATION) > 0)
+	{
+		_DEBUG("Calibrating sensor:");
+		DEBUG_LN(calibrate_packet->sensor);
+		while (millis() - start < timeout) {
+
+			if (start_sensor_calibration(calibrate_packet, &outGoing)) {
+				Devices::xbee->send(request);
+				XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_TX_STATUS_RESPONSE, NULL, Devices::queue_packet);
+			}else
+			{
+				DEBUG_LN("Something went wrong.");
+				//Error
+//				XBeeUtil::wait_for_packet_type(Devices::xbee, 50, ZB_TX_STATUS_RESPONSE, NULL, Devices::queue_packet);
+			}
+			if (Devices::search_and_retrieve_from_queue(SENSORLINK_CALIBRATE_PACKET, packet)) {
+				_queued = static_cast<ZBRxResponse*>(packet);
+				queued = (CalibratePacket*)_queued->getData();
+				DEBUG_LN();
+				_DEBUG("Found Calibrate Packet: ");
+				DEBUG_LN(queued->flags);
+				if((queued->flags & SENSORLINK_CALIBRATION_FLAG_STOP_CALIBRATION) > 0){
+					start = start - (timeout * 2);
+					Devices::atlas->endContinuous();
+					DEBUG_LN("Received quit calibration packet.");
+				}else if((queued->flags & SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION) > 0)
+				{
+					DEBUG_LN("Received accept calibration.");
+					accept_sensor_calibration(queued);
+					start = millis();
+				}
+				free(_queued->getData());
+				delete packet;
+			}
+		}
+		DEBUG_LN("Finished Calibrating...");
+		Devices::atlas->endContinuous();
+	}
+}
+
+bool Devices::search_and_retrieve_from_queue(uint32_t packet_type, XBeeResponse* &packet)
+{
+	if(Devices::packet_queue_head == NULL)
+	{
+		return false;
+	}
+//	_DEBUG_LN("Searching for packet.");
+	list_node<XBeeResponse>* prev = Devices::packet_queue_head;
+	list_node<XBeeResponse>* current = Devices::packet_queue_head;
+	while(current != NULL)
+	{
+		if(current->node->getApiId() == ZB_RX_RESPONSE)
+		{
+			ZBRxResponse* res = static_cast<ZBRxResponse*>(current->node);
+			if(res->getData(0) == packet_type)
+			{
+				packet = current->node;
+				prev->next = current->next;
+				if(current == Devices::packet_queue_head)
+				{
+					Devices::packet_queue_head = current->next;
+				}
+				delete current;
+				return true;
+
+			}
+		}
+		prev = current;
+		current = current->next;
+	}
+
+	return false;
+
+}
 
 void _queue_packet(XBeeResponse* packet)
 {
 	DEBUG("Queued packet with API id: ");
 	DEBUG_LN(packet->getApiId());
-	if(Devices::packet_queue_head == NULL &&  Devices::packet_queue_tail == NULL)
+	if(Devices::packet_queue_head == NULL)
 	{
 		Devices::packet_queue_head = new list_node<XBeeResponse>();
-		Devices::packet_queue_tail = Devices::packet_queue_head;
 		Devices::packet_queue_head->node = packet;
 	}else
 	{
-		Devices::packet_queue_tail->next = new list_node<XBeeResponse>();
-		Devices::packet_queue_tail = Devices::packet_queue_tail->next;
-		Devices::packet_queue_tail->node = packet;
+		list_node<XBeeResponse>* tmp = new list_node<XBeeResponse>();
+		tmp->node = packet;
+		tmp->next = Devices::packet_queue_head;
+		Devices::packet_queue_head = tmp;
+
 	}
+//	if(Devices::packet_queue_head == NULL &&  Devices::packet_queue_tail == NULL)
+//	{
+//		Devices::packet_queue_head = new list_node<XBeeResponse>();
+//		Devices::packet_queue_tail = Devices::packet_queue_head;
+//		Devices::packet_queue_head->node = packet;
+//	}else
+//	{
+//		Devices::packet_queue_tail->next = new list_node<XBeeResponse>();
+//		Devices::packet_queue_tail = Devices::packet_queue_tail->next;
+//		Devices::packet_queue_tail->node = packet;
+//	}
 }
 
 #define _QUEUE_PACKET(packet_type) {packet_type* packet = new packet_type();\
 		Devices::xbee->getResponse(*packet);\
+		packet->setFrameLength(Devices::xbee->getResponse().getFrameDataLength());\
+		uint8_t* data = (uint8_t*)malloc(packet->getFrameDataLength());\
+		memcpy(data, packet->getFrameData(), packet->getFrameDataLength());\
+		packet->setFrameData(data);\
 		_queue_packet(packet);}
 
 
 void Devices::queue_packet()
 {
-
 	switch (Devices::xbee->getResponse().getApiId()) {
 //	case TX_64_REQUEST:
 //		_QUEUE_PACKET(RemoteAtCommandResponse);
@@ -265,6 +421,16 @@ void Devices::queue_packet()
 
 //	return false;
 
+}
+
+
+
+void Devices::send_status(StatusPacket* status_packet)
+{
+	XBeeAddress64 addr64 = XBeeAddress64(Devices::sink_address->DH, Devices::sink_address->DL);
+	ZBTxRequest request(addr64, (byte*)status_packet, sizeof(StatusPacket));
+	Devices::xbee->send(request);
+	DEBUG_LN("Sent Status packet.");
 }
 
 void Devices::sample()

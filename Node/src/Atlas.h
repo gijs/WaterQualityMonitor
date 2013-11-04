@@ -28,9 +28,15 @@
 static char END_COMMAND = 'E';
 static char IDENTIFY_COMMAND = 'I';
 static char SINGLE_SAMPLE_COMMAND = 'R';
+static char CONTINUOUS_COMMAND = 'C';
 
 enum Sensor {
 	PH, DO, ORP, EC
+};
+
+enum PHCalibration
+{
+	Four, Seven, Ten
 };
 
 
@@ -57,6 +63,8 @@ private:
 	SensorDescriptor sensorMap[ATLAS_MAX_SENSORS];
 	int8_t sensorCount;
 
+	int32_t CMODE;
+
 	void clean_sensor_port();
 	bool select(Sensor sensor);
 	bool select(int port);
@@ -78,6 +86,11 @@ public:
 	double getORP();
 	String dumpPort(Sensor sensorToSelect);
 	int8_t getSensorCount();
+
+
+	double continuousPH(double temperature);
+	void   acceptPH(PHCalibration val);
+	void endContinuous();
 };
 
 

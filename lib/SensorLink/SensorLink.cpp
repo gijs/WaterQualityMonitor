@@ -33,3 +33,42 @@ void DataPacket::init()
 	packet_type = SENSORLINK_DATA_PACKET;
 	header_size = sizeof(DataPacket);
 }
+
+void CalibratePacket::init()
+{
+	packet_type = SENSORLINK_CALIBRATE_PACKET;
+	header_size = sizeof(CalibratePacket);
+	flags = 0;
+	value1 = 0;
+	exponent1 = 0;
+	value2 = 0;
+	exponent2 = 0;
+	value2 = 0;
+	exponent2 = 0;
+}
+
+void CalibratePacket::setVal1(float value, int16_t exponent)
+{
+	value1 = int64_t(double(value) * (pow(10, exponent)));
+	this->exponent1 = -1 * exponent;
+}
+
+void CalibratePacket::setVal2(float value, int16_t exponent)
+{
+	value2 = int64_t(double(value) * (pow(10, exponent)));
+	this->exponent2 = -1 * exponent;
+}
+
+void CalibratePacket::setVal3(float value, int16_t exponent)
+{
+	value3 = int64_t(double(value) * (pow(10, exponent)));
+	this->exponent3 = -1 * exponent;
+}
+
+void StatusPacket::init()
+{
+	packet_type = SENSORLINK_STATUS_PACKET;
+	header_size = sizeof(StatusPacket);
+	flags = 0;
+	codes = 0;
+}

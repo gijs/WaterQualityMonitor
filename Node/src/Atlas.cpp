@@ -27,6 +27,7 @@ Atlas::Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pi
 	this->e_pin = e_pin;
 	this->so_pin = so_pin;
 	this->si_pin = si_pin;
+	CMODE = -1;
 
 	pinMode(e_pin, OUTPUT);
 	disable();
@@ -277,6 +278,53 @@ bool Atlas::select(int port)
 int8_t Atlas::getSensorCount()
 {
 	return sensorCount;
+}
+
+double Atlas::continuousPH(double temperature)
+{
+	if(!isnan(temperature) && CMODE == -1)
+	{
+		getPH(temperature);
+	}
+
+	if (CMODE == -1) {
+		if (select(PH)) {
+			enable();
+			CMODE = PH;
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(CONTINUOUS_COMMAND);
+			sensor_stream->print(carrage_return);
+
+		}
+	}
+	if(CMODE == PH)
+	{
+		String d = sensor_stream->readStringUntil(carrage_return);
+		return toDouble(d);
+	}
+
+	return NAN;
+}
+
+void Atlas::acceptPH(PHCalibration val)
+{
+	DEBUG("Accept ");
+	DEBUG_LN(val);
+}
+
+void Atlas::endContinuous()
+{
+	if (CMODE != -1) {
+	sensor_stream->print(END_COMMAND);
+	sensor_stream->print(carrage_return);
+	delay(100);
+	sensor_stream->print(END_COMMAND);
+	sensor_stream->print(carrage_return);
+	clean_sensor_port();
+	disable();
+	CMODE = -1;
+	}
+
 }
 
 

@@ -73,7 +73,7 @@ namespace Devices
 	extern RecordStorage* store;
 	extern Atlas* atlas;
 	extern XBeeSinkAddress* sink_address;
-	extern list_node<XBeeResponse> *packet_queue_head, *packet_queue_tail;
+	extern list_node<XBeeResponse> *packet_queue_head; //, *packet_queue_tail;
 
 	extern int32_t SH;
 	extern int32_t SL;
@@ -102,10 +102,16 @@ namespace Devices
 	void sample();
 
 	bool associate();
+	bool matchSinkPacket();
 	bool findSink();
 	void queue_packet();
 //	bool wait_for_packet_type(int timeout, int api_id);
 
+	void send_status(StatusPacket* status_packet);
+
+	void calibrate(ZBRxResponse* calibrate_request, unsigned long timeout);
+
+	bool search_and_retrieve_from_queue( uint32_t packet_type, XBeeResponse* &packet);
 
 
 	uint16_t write_eeprom(byte* loc, uint16_t eeprom_position, uint16_t count);

@@ -28,9 +28,25 @@
 
 #define SENSORLINK_SINK_PACKET 1
 #define SENSORLINK_DATA_PACKET 2
+#define SENSORLINK_CALIBRATE_PACKET 4
+#define SENSORLINK_STATUS_PACKET 8
 
 #define SENSORLINK_DATA_FLAG_NO_ERROR 0
 #define SENSORLINK_DATA_FLAG_ERROR_HANDLING_DATA 1
+
+#define SENSORLINK_STATUS_FLAG_OK 1
+#define SENSORLINK_STATUS_FLAG_DEVICE_ERROR 2
+
+#define SENSORLINK_CALIBRATION_FLAG_STOP_CALIBRATION 1
+#define SENSORLINK_CALIBRATION_FLAG_START_CALIBRATION 2
+#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_0 4
+#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_1 16
+#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_2 32
+#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_3 64
+#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_4 128
+#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_5 128
+#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION ( SENSORLINK_CALIBRATION_FLAG_ACCEPT_0 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_1 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_2 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_3 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_4 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_5)
+
 
 
 struct SensorLinkPacket
@@ -55,6 +71,29 @@ struct DataPacket: SensorLinkPacket
 	uint8_t  row_size;
 	uint8_t  row_count;
 
+	void init();
+};
+
+struct CalibratePacket: SensorLinkPacket
+{
+	int32_t sensor;
+	int32_t flags;
+	int64_t value1;
+	int16_t exponent1;
+	int64_t value2;
+	int16_t exponent2;
+	int64_t value3;
+	int16_t exponent3;
+	void init();
+	void setVal1(float value, int16_t exponent);
+	void setVal2(float value, int16_t exponent);
+	void setVal3(float value, int16_t exponent);
+};
+
+struct StatusPacket: SensorLinkPacket
+{
+	int64_t flags;
+	int64_t codes;
 	void init();
 };
 

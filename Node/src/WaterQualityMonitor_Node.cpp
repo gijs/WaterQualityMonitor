@@ -19,11 +19,23 @@
 
 #include "WaterQualityMonitor_Node.h"
 
-int sample_interval = 60;
-int sample_count = 11;
-int sample_upload_at = 12;
+//int sample_interval = 900;
+//int sample_count = -1;
+//int sample_upload_at = -1;
+//
+//int32_t upload_interval = 86400; // 24 * 60 * 60
+//int32_t upload_offset   = 43200; // 12 * 60 * 60
 
-int max_transmitt_count = 5;
+int sample_interval = 60;
+int sample_count = 0;
+int sample_upload_at = 1;
+
+int32_t upload_interval = 86400; // 24 * 60 * 60
+int32_t upload_offset   = 43200; // 12 * 60 * 60
+
+
+
+int max_transmit_count = 5;
 
 int32_t max_record_size = max_record_size(sizeof(DoubleRecord), sizeof(OneWireRecord), sizeof(SalinityRecord));
 
@@ -49,25 +61,38 @@ void setup()
 			max_record_size //Maximum Record Size
 
 	);
+	StatusPacket status;
+	status.init();
 	if(device_status > 0)
 	{
 		DEBUG("Error initializing device: ");
 		DEBUG_LN(device_status);
 		while(true){};
 	}
-
+	set_sample_count();
+	status.flags = SENSORLINK_STATUS_FLAG_OK;
+	status.codes = 0;
+	Devices::send_status(&status);
 	downtime("Aligning to boundary");
+
 
 }
 
 void loop()
 {
+	DEBUG("Upload at: ");
+	DEBUG(sample_upload_at);
+	DEBUG(" current counter: ");
+	DEBUG_LN(sample_count);
+
 	FREE_MEM;
 	Devices::sample();
 	sample_count++;
 	if (do_upload()) {
 		upload();
+		sample_count = 0;
 	}
+	handle_queue();
 	downtime("Sleeping...");
 }
 
@@ -84,14 +109,67 @@ void downtime(const char* message)
 	Devices::displayDate(&_t, &DEBUG_STREAM);
 
 	is_downtime = true;
-	while(is_downtime){	}
+	while(is_downtime){
+		XBeeUtil::wait_for_packet_type(Devices::xbee, 50, 0xFFFFF, NULL, Devices::queue_packet);
+		handle_queue();
+	}
 	detachInterrupt(0);
 	RTC.clearAlarmFlag(3);
+}
+
+void handle_queue()
+{
+	list_node<XBeeResponse>* tmp;
+	while(Devices::packet_queue_head != NULL)
+	{
+		tmp = Devices::packet_queue_head;
+		Devices::packet_queue_head = Devices::packet_queue_head->next;
+		handle_queued_packet(tmp->node);
+		free(tmp->node->getFrameData());
+		delete tmp->node;
+		delete tmp;
+	}
+//	Devices::packet_queue_tail = NULL;
+}
+
+void handle_queued_packet(XBeeResponse* packet)
+{
+	switch(packet->getApiId())
+	{
+	case ZB_RX_RESPONSE:
+		ZBRxResponse* request = static_cast<ZBRxResponse*>(packet);
+		DEBUG("Packet ID: ");
+		DEBUG_LN(request->getData(0));
+		switch(request->getData(0))
+		{
+		case SENSORLINK_CALIBRATE_PACKET:
+			Devices::calibrate(request, 60000);
+			break;
+		}
+
+		break;
+	}
 }
 
 bool do_upload()
 {
 	return sample_count >= sample_upload_at;
+}
+
+void set_sample_count()
+{
+	if(upload_interval % sample_interval != 0)
+	{
+		DEBUG_LN("Warning, sample_interval is not a factor of upload_interval.");
+		delay(10000);
+	}
+	if(sample_count == -1 && sample_upload_at == -1)
+	{
+		time_t time = RTC.get();
+		sample_upload_at = upload_interval / sample_interval;
+		sample_count = (((time % upload_interval) + upload_offset) / sample_interval) % sample_upload_at;
+	}
+
 }
 
 time_t wakeup_at()
@@ -106,8 +184,6 @@ void upload()
 {
 	DEBUG_LN("Upload: ");
 	Devices::associate();
-//	XBeeAddress64 addr64 = XBeeAddress64(0x0, BROADCAST_ADDRESS);
-	//XBeeAddress64 addr64 = XBeeAddress64(0x0013a200, 0x40a53d1e);
 	XBeeAddress64 addr64 = XBeeAddress64(Devices::sink_address->DH, Devices::sink_address->DL);
 	if(!Devices::associate())
 	{
@@ -168,7 +244,6 @@ void upload()
 	while(records_to_upload > 0)
 	{
 		int32_t pos = Devices::store->getUploadedCount();
-
 		_DEBUG("Current Record Position: ");
 		DEBUG_LN(pos);
 
@@ -188,12 +263,14 @@ void upload()
 		request.setPayloadLength(header_size + (to_upload * record_size));
 
 		Devices::xbee->send(request);
-		if(Devices::xbee->readPacket(5000) && Devices::xbee->getResponse().getApiId() == ZB_TX_STATUS_RESPONSE)
-		{
 
+		if(XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_TX_STATUS_RESPONSE, NULL, Devices::queue_packet))
+//		if(Devices::xbee->readPacket(5000) && Devices::xbee->getResponse().getApiId() == ZB_TX_STATUS_RESPONSE)
+		{
 			Devices::xbee->getResponse(response);
 			DEBUG("Delivery status: ");
 			DEBUG_LN(response.getDeliveryStatus());
+
 			if(response.isSuccess())
 			{
 				DEBUG_LN();
@@ -203,30 +280,34 @@ void upload()
 				header->senquence += 1;
 				records_to_upload = Devices::store->getRecordCount() - Devices::store->getUploadedCount();
 				fail_count = 0;
+				//Add a match packet above and have the basestation send an acc packet and we can avoid this delay
 				delay(500);
+
 			}else
 			{
+
 				DEBUG_LN();
 				_DEBUG_LN("Failed to transmit packet.");
 				Devices::store->readHeader();
 				fail_count++;
+
 			}
 		}
 		else
 		{
+			Devices::store->readHeader();
 			DEBUG_LN();
 			_DEBUG_LN("Failed to transmit packet.");
 			fail_count++;
 		}
 
-		if(fail_count >= max_transmitt_count)
+		if(fail_count >= max_transmit_count)
 		{
 			DEBUG_LN();
 			_DEBUG_LN("MAX retry limit exceeded.");
 			break;
 		}
 	}
-
 }
 
 
