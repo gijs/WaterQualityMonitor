@@ -21,11 +21,9 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <mytags:layout title="Calibration" view="c">
 
-
 <jsp:attribute name="head">
-    <%--<script src="/js/experiments.js"></script>--%>
-    <%--<link rel="stylesheet" href="/css/commands.css"/>--%>
 </jsp:attribute>
+
 
     <jsp:body>
         <div id="calibrate_content" class="span5">

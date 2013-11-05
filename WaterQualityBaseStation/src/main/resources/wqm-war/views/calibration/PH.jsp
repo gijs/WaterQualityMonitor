@@ -22,17 +22,16 @@
 <mytags:layout title="Calibrate ${station.getCommonName()} ${sensor.getLongName()}" view="calibrate">
 
 <jsp:attribute name="head">
-    <%--<script src="/js/experiments.js"></script>--%>
-    <%--<link rel="stylesheet" href="/css/commands.css"/>--%>
 </jsp:attribute>
 
 
     <jsp:body>
         <div id="calibrate_content" class="span5">
-        <H1>PH</H1>
-            <div id="ph_instructions" >
+            <H1>PH</H1>
+
+            <div id="ph_instructions">
                 <h3>PH Calibration</h3>
-                Calibration of the PH sensor is a three stage process, requiring the three Atlais Scientific PH
+                Calibration of the PH sensor is a three stage process, requiring the three Atlas Scientific PH
                 calibration solutions.
             </div>
             <a href="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0">Next</a>

@@ -1,3 +1,10 @@
+<%@tag description="page layout" %>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@attribute name="head" fragment="true"%>
+<%@attribute name="station_nav" fragment="true"%>
+<%@attribute name="title" required="true" type="java.lang.String"%>
+<%@attribute name="view" required="true" type="java.lang.String"%>
+<!DOCTYPE html>
 <%--
   ~ Water Quality Monitor Java Basestation
   ~ Copyright (C) 2013  nigelb
@@ -16,13 +23,7 @@
   ~ with this program; if not, write to the Free Software Foundation, Inc.,
   ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
   --%>
-<%@tag description="page layout" %>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@attribute name="head" fragment="true"%>
-<%@attribute name="station_nav" fragment="true"%>
-<%@attribute name="title" required="true" type="java.lang.String"%>
-<%@attribute name="view" required="true" type="java.lang.String"%>
-<!DOCTYPE html>
+
 <html>
 <head>
     <title>${title}</title>

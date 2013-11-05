@@ -21,6 +21,7 @@ package wqm.config;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -34,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class WQMConfiguration {
     private RadioConfig radios;
     private DataOutConfig data;
+    private int maxWebDataSize = 720;
 
 
     @XmlElement(name = "Radios")
@@ -53,6 +55,16 @@ public class WQMConfiguration {
     public void setData(DataOutConfig data) {
         this.data = data;
     }
+
+    @XmlAttribute
+    public int getMaxWebDataSize() {
+        return maxWebDataSize;
+    }
+
+    public void setMaxWebDataSize(int maxWebDataSize) {
+        this.maxWebDataSize = maxWebDataSize;
+    }
+
 
     public static void main(String[] args) throws JAXBException {
         WQMConfiguration c = new WQMConfiguration();

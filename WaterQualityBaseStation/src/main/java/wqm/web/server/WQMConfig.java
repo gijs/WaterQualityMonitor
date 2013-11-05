@@ -44,13 +44,14 @@ public class WQMConfig {
     private int port;
     private String configDir;
 
-
     private JAXBContext ctx;
 
     private Stations stations = null;
     private RadioConfig radioConfig = null;
     private Runnable shutdownCallback;
     private DataOutConfig dataConfig;
+
+    private int maxDataSize;
 
     public WQMConfig() throws JAXBException {
         ctx = JAXBContext.newInstance(Stations.class, RadioConfig.class, WQMConfiguration.class);
@@ -92,6 +93,7 @@ public class WQMConfig {
             WQMConfiguration cfg = (WQMConfiguration) ctx.createUnmarshaller().unmarshal(wqmConfig);
             radioConfig = cfg.getRadios();
             dataConfig = cfg.getData();
+            maxDataSize = cfg.getMaxWebDataSize();
         } else {
             throw new InvalidRadioException("The file " + wqmConfig + " does not exist.");
         }
@@ -153,5 +155,13 @@ public class WQMConfig {
 
     public DataOutConfig getDataConfig() {
         return dataConfig;
+    }
+
+    public int getMaxDataSize() {
+        return maxDataSize;
+    }
+
+    public void setMaxDataSize(int maxDataSize) {
+        this.maxDataSize = maxDataSize;
     }
 }

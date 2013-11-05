@@ -1,6 +1,3 @@
-
-<%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%--
   ~ Water Quality Monitor Java Basestation
   ~ Copyright (C) 2013  nigelb
@@ -20,11 +17,12 @@
   ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
   --%>
 
+<%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <mytags:layout title="Calibrate ${station.getCommonName()} PH" view="calibrate">
 
 <jsp:attribute name="head">
     <script src="/js/calibrate_ph.js"></script>
-    <%--<link rel="stylesheet" href="/css/commands.css"/>--%>
 </jsp:attribute>
 
 

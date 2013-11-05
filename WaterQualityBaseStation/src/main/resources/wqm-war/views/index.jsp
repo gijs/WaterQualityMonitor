@@ -21,17 +21,22 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <mytags:layout title="Experiments" view="m">
 
-
 <jsp:attribute name="head">
-    <%--<script src="/js/experiments.js"></script>--%>
-    <%--<link rel="stylesheet" href="/css/commands.css"/>--%>
 </jsp:attribute>
 
 
     <jsp:body>
-        <c:forEach var="entry" items="${stations}">
-            Name:  ${entry} <br/>
-            Value: ${entry.get_Address()} <br/>
-        </c:forEach>
+        <div id="calibrate_content" class="span5">
+            <H1>Select Station to View</H1>
+            <br/>
+
+            Please select the sensor whose data you would like to view: <br/>
+            <ul>
+                <c:forEach var="station" items="${stations}">
+                    <li><a href="/wqm/${view}/${station.getCompactAddress()}">${station.getDisplayName()}</a></li>
+                </c:forEach>
+            </ul>
+
+        </div>
     </jsp:body>
 </mytags:layout>

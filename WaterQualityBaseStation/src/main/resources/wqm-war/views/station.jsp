@@ -22,8 +22,6 @@
 <mytags:layout title="Experiments" view="station">
 
 <jsp:attribute name="head">
-    <%--<script src="/js/experiments.js"></script>--%>
-    <%--<link rel="stylesheet" href="/css/commands.css"/>--%>
 </jsp:attribute>
 
 

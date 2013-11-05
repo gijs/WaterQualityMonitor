@@ -17,24 +17,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.radio.SensorLink.packets;
+package wqm.web.exceptions;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Date: 11/4/13
- * Time: 9:58 AM
+ * Date: 11/5/13
+ * Time: 7:40 PM
  *
  * @author NigelB
  */
-public class StatusPacket  extends SensorLinkPacket {
-    public static final byte PACKET_ID = 8;
-    public static final byte HEADER_SIZE = 18;
-
-    public StatusPacket(int[] data) {
-        super(data);
-    }
-
-    @Override
-    public int getPacketID() {
-        return PACKET_ID;
-    }
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+public class _404 extends RuntimeException{
 }

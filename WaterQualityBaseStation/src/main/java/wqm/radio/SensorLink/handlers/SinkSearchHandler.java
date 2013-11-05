@@ -27,6 +27,7 @@ import wqm.radio.SensorLink.PacketHandlerContext;
 import wqm.radio.SensorLink.packets.SensorLinkPacket;
 import wqm.radio.SensorLink.packets.SinkSearch;
 import wqm.radio.TimedPacket;
+import wqm.web.server.WQMConfig;
 
 /**
  * Date: 10/22/13
@@ -36,6 +37,7 @@ import wqm.radio.TimedPacket;
  */
 public class SinkSearchHandler implements PacketHandler<SinkSearch> {
     private static Logger logger = Logger.getLogger(SinkSearchHandler.class);
+
     public boolean handlePacket(PacketHandlerContext ctx, ZNetRxResponse xbeeResponse, SinkSearch packet) {
         if (packet.getPacketID() == SinkSearch.PACKET_ID) {
 

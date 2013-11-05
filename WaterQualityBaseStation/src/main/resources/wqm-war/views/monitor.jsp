@@ -19,15 +19,23 @@
 
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<mytags:layout title="Calibrate ${station.getCommonName()} PH" view="calibrate">
+<mytags:layout title="Monitoring ${station.getDisplayName()}" view="m">
 
 <jsp:attribute name="head">
+    <script src="/js/monitor.js"></script>
 </jsp:attribute>
 
 
     <jsp:body>
-        <div id="calibrate_content" class="span5">
-            <H1>Dissolved Oxygen</H1>
+        <div id="monitor_content" class="span5">
+            <H1>Monitoring ${station.getDisplayName()}</H1>
+            <br/>
+            <div id="monitor_graph"></div>
+            <script>
+                initMonitor("${station.getDisplayName()} Water Quality", "monitor_graph", "/wqm/d/${station.getCompactAddress()}")
+            </script>
         </div>
+
     </jsp:body>
+
 </mytags:layout>

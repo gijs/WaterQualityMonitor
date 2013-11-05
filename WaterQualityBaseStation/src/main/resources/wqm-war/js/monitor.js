@@ -1,5 +1,4 @@
 
-
 /*
  * Water Quality Monitor Java Basestation
  * Copyright (C) 2013  nigelb
@@ -19,10 +18,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+function initMonitor(title, chart_element_id, url) {
 
-
-
-
-
-
-
+}

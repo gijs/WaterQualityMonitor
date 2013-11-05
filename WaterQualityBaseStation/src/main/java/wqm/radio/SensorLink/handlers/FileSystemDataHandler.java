@@ -17,12 +17,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.radio;
+package wqm.radio.SensorLink.handlers;
 
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 import org.apache.log4j.Logger;
 import wqm.PluginManager;
 import wqm.data.CsvDataDumper;
+import wqm.radio.DataSource;
 import wqm.radio.RecordStorage.record.BaseRecord;
 import wqm.radio.RecordStorage.record.FloatRecord;
 import wqm.radio.RecordStorage.record.OneWireRecord;
@@ -59,19 +60,21 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
     private SimpleDateFormat fmt;
 
     public FileSystemDataHandler(WQMConfig config) {
-        this.config = config;
-        dataDir = new File(config.getDataConfig().getDataOutputDirectory(), "WQMData");
-        rotatePeriod = config.getDataConfig().getRotatePeriod();
-        fmt = config.getDataConfig().toFormat();
-        dataDir.mkdirs();
-        List<CsvDataDumper> _handlers = PluginManager.<CsvDataDumper>getPlugins(CsvDataDumper.class, null);
-        for (CsvDataDumper handler : _handlers) {
-            dumpers.put(handler.getPacketType(), handler);
-        }
+            this.config = config;
+            dataDir = new File(config.getDataConfig().getDataOutputDirectory(), "WQMData");
+            rotatePeriod = config.getDataConfig().getRotatePeriod();
+            fmt = config.getDataConfig().toFormat();
+            dataDir.mkdirs();
+            List<CsvDataDumper> _handlers = PluginManager.<CsvDataDumper>getPlugins(CsvDataDumper.class, null);
+            for (CsvDataDumper handler : _handlers) {
+                dumpers.put(handler.getPacketType(), handler);
+            }
+
     }
 
 
     public boolean handlePacket(PacketHandlerContext ctx, ZNetRxResponse xbeeResponse, DataUpload packet) {
+
         File outputDir = new File(dataDir, AddressUtil.getCompactStringAddress(xbeeResponse.getRemoteAddress64()));
         outputDir.mkdirs();
         long currentTime = System.currentTimeMillis();
@@ -80,15 +83,13 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
         String prefix = fmt.format(new Date(currentTime - remainder));
 
         for (BaseRecord rec : packet.getRecords()) {
-            if(dumpers.containsKey(rec.getRecord_type()))
-            {
-                try{
+            if (dumpers.containsKey(rec.getRecord_type())) {
+                try {
                     dumpers.get(rec.getRecord_type()).dumpData(outputDir, prefix, rec);
                 } catch (IOException e) {
                     logger.error("Error writing data:", e);
                 }
-            }else
-            {
+            } else {
 
                 logger.error(String.format("Cannot find data handler for: %s", rec.toString()));
             }

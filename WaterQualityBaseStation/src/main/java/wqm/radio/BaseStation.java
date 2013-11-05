@@ -67,9 +67,10 @@ public class BaseStation implements PacketListener {
 
     private volatile boolean running = true;
 
-    public BaseStation(Port port, WQMConfig config, List<PacketHandler> handlers) throws XBeeException, NamingException {
+    public BaseStation(Port port, WQMConfig config) throws XBeeException, NamingException {
         String _port = port.getPort();
         int baud = port.getBaud();
+        ctx.setConfig(config);
         retries = port.getRetries();
         this.config = config;
         xbee.open(_port, baud);
@@ -88,20 +89,10 @@ public class BaseStation implements PacketListener {
         xbee.sendAtCommand(new AtCommand("AI"));
         res = xbee.getResponse();
 
-        List<PacketHandler> _handlers = PluginManager.<PacketHandler>getPlugins(PacketHandler.class, null);
+        List<PacketHandler> _handlers = PluginManager.<PacketHandler>getPlugins(PacketHandler.class, new Object[]{config});
         for (PacketHandler handler : _handlers) {
             registerPacketHandler(handler);
         }
-//        packetHandlers.put(calHandler.getPacketId(), calHandler);
-
-//        List<DataUploadHandler> hdl = (DataUploadHandler) packetHandlers.get(DataUpload.PACKET_ID);
-//        for (PacketHandler handler : handlers) {
-//            hdl.registerHandler(handler);
-//        }
-        for (PacketHandler handler : handlers) {
-            registerPacketHandler(handler);
-        }
-
 
         for (Station station : config.getStations()) {
             addresses.put(station.getAddress(), station.getCommonName() == null ? "" : station.getCommonName());
@@ -215,7 +206,6 @@ public class BaseStation implements PacketListener {
             ZNetTxRequest tx = new ZNetTxRequest(address, packet.getData());
             try {
                 ctx.getQueue().put(new TimedPacket(tx, System.currentTimeMillis()));
-                logger.trace(tx);
             } catch (InterruptedException e) {
                 logger.error("Error adding packet to queue", e);
             }

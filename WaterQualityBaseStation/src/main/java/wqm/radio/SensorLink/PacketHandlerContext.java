@@ -21,6 +21,7 @@ package wqm.radio.SensorLink;
 
 import wqm.radio.SensorLink.packets.SinkSearch;
 import wqm.radio.TimedPacket;
+import wqm.web.server.WQMConfig;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -33,6 +34,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class PacketHandlerContext {
     private LinkedBlockingQueue<TimedPacket> queue = new LinkedBlockingQueue<TimedPacket>();
     private Thread sender;
+    private WQMConfig config;
 
     public SinkSearch getSinkPacket() {
         return sinkPacket;
@@ -58,5 +60,13 @@ public class PacketHandlerContext {
 
     public void setSender(Thread sender) {
         this.sender = sender;
+    }
+
+    public void setConfig(WQMConfig config) {
+        this.config = config;
+    }
+
+    public WQMConfig getConfig() {
+        return config;
     }
 }
