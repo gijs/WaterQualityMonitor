@@ -56,6 +56,15 @@ public enum AtlasSensor {
         return longName;
     }
 
+    public static AtlasSensor find(Integer id)
+    {
+        if(id == null)
+        {
+            return null;
+        }
+        return find(id.intValue());
+
+    }
     public static AtlasSensor find(int id)
     {
         for (AtlasSensor atlasSensor : values()) {
