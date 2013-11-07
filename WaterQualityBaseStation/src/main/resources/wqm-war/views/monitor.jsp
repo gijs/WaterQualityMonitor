@@ -22,6 +22,7 @@
 <mytags:layout title="Monitoring ${station.getDisplayName()}" view="m">
 
 <jsp:attribute name="head">
+    <script src="/js/seriesMap.js"></script>
     <script src="/js/monitor.js"></script>
 </jsp:attribute>
 

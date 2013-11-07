@@ -59,6 +59,16 @@
         <appender-ref ref="STDOUT"/>
     </category>
 
+    <category name="wqm.radio.SensorLink.packets" additivity="false">
+        <priority value="trace" />
+        <appender-ref ref="STDOUT"/>
+    </category>
+
+    <category name="wqm.radio.RecordStorage.record" additivity="false">
+        <priority value="error" />
+        <appender-ref ref="STDOUT"/>
+    </category>
+
     <root>
         <priority value="error"/>
         <appender-ref ref="STDOUT"/>

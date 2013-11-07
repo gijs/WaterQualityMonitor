@@ -19,6 +19,7 @@
 
 package wqm.radio.SensorLink.packets;
 
+import org.apache.log4j.Logger;
 import wqm.radio.RecordStorage.record.BaseRecord;
 
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import static wqm.radio.util.Util.toUnsignedInt;
  * @author NigelB
  */
 public class DataUpload extends SensorLinkPacket {
+    private static Logger logger = Logger.getLogger(DataUpload.class);
     public static final int PACKET_ID = 2;
     public static final int HEADER_SIZE = 12;
 
@@ -66,9 +68,15 @@ public class DataUpload extends SensorLinkPacket {
         for (int i = getHeader_length(), row_pos = 0; row_pos < row_count; i += row_size, row_pos++) {
             int record[] = new int[row_size];
             System.arraycopy(data, i, record, 0, row_size);
-            BaseRecord rec = BaseRecord.constructPacket(record);
-            if (rec != null) {
-                records.add(rec);
+            try{
+                BaseRecord rec = BaseRecord.constructPacket(record);
+                logger.trace(rec);
+                if (rec != null) {
+                    records.add(rec);
+                }
+            }catch(Throwable t)
+            {
+                logger.error("Error constructing SensorLink Packet", t);
             }
         }
     }

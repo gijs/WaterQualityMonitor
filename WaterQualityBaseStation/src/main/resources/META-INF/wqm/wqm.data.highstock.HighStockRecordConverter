@@ -1,0 +1,4 @@
+wqm.data.highstock.FloatRecordConverter
+wqm.data.highstock.OneWireRecordConverter
+wqm.data.highstock.SalinityRecordConverter
+wqm.data.highstock.DORecordConverter

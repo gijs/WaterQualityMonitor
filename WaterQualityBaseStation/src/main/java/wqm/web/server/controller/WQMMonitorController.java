@@ -20,9 +20,11 @@
 package wqm.web.server.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+import wqm.config.Station;
 import wqm.radio.StationManager;
 import wqm.web.server.WQMConfig;
 
@@ -44,6 +46,15 @@ public class WQMMonitorController extends BaseWQMController {
     @RequestMapping(method = RequestMethod.GET, value = "/m")
     public ModelAndView monitor(HttpServletRequest request) {
         ModelAndView view = new ModelAndView("index");
+        addCommonParams(view, request);
+        return view;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/m/{stationAddress}")
+    public ModelAndView monitorStation(HttpServletRequest request, @PathVariable String stationAddress) {
+        ModelAndView view = new ModelAndView("monitor");
+        Station station = config.getStation(stationAddress);
+        view.addObject("station", station);
         addCommonParams(view, request);
         return view;
     }

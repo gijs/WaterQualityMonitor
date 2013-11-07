@@ -22,16 +22,11 @@ package wqm.radio.SensorLink.handlers;
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 import org.apache.log4j.Logger;
 import wqm.PluginManager;
-import wqm.data.CsvDataDumper;
+import wqm.data.csv.CsvDataDumper;
 import wqm.radio.DataSource;
 import wqm.radio.RecordStorage.record.BaseRecord;
-import wqm.radio.RecordStorage.record.FloatRecord;
-import wqm.radio.RecordStorage.record.OneWireRecord;
-import wqm.radio.RecordStorage.record.SalinityRecord;
 import wqm.radio.SensorLink.PacketHandlerContext;
-import wqm.radio.SensorLink.handlers.PacketHandler;
 import wqm.radio.SensorLink.packets.DataUpload;
-import wqm.radio.SensorLink.packets.SensorLinkPacket;
 import wqm.radio.util.AddressUtil;
 import wqm.web.server.WQMConfig;
 
@@ -41,7 +36,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.logging.ErrorManager;
 
 /**
  * Date: 11/2/13
@@ -55,7 +49,7 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
     private File dataDir;
     private long rotatePeriod;
 
-    private Hashtable<Integer, CsvDataDumper> dumpers = new Hashtable<Integer, CsvDataDumper>();
+    private Hashtable<Class, CsvDataDumper> dumpers = new Hashtable<Class, CsvDataDumper>();
 
     private SimpleDateFormat fmt;
 
@@ -67,7 +61,7 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
             dataDir.mkdirs();
             List<CsvDataDumper> _handlers = PluginManager.<CsvDataDumper>getPlugins(CsvDataDumper.class, null);
             for (CsvDataDumper handler : _handlers) {
-                dumpers.put(handler.getPacketType(), handler);
+                dumpers.put(handler.getHandlerFor(), handler);
             }
 
     }
@@ -83,9 +77,9 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
         String prefix = fmt.format(new Date(currentTime - remainder));
 
         for (BaseRecord rec : packet.getRecords()) {
-            if (dumpers.containsKey(rec.getRecord_type())) {
+            if (dumpers.containsKey(rec.getClass())) {
                 try {
-                    dumpers.get(rec.getRecord_type()).dumpData(outputDir, prefix, rec);
+                    dumpers.get(rec.getClass()).dumpData(outputDir, prefix, rec);
                 } catch (IOException e) {
                     logger.error("Error writing data:", e);
                 }

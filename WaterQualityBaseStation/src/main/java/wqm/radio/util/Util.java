@@ -146,4 +146,8 @@ public class Util {
 
     }
 
+    public static float getIEEE754(int[] data, int offset) {
+        ByteBuffer buf = littleEndianGrab(data, offset, 4);
+        return buf.getFloat(0);
+    }
 }

@@ -1,0 +1,4 @@
+wqm.data.csv.FloatRecordCsvDumper
+wqm.data.csv.OneWireRecordCsvDumper
+wqm.data.csv.SalinityRecordCsvDumper
+wqm.data.csv.DORecordCSVDumper

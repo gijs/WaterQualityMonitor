@@ -19,7 +19,6 @@
 
 package wqm.web.server.controller;
 
-import com.rapplogic.xbee.api.XBeeAddress64;
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Controller;
@@ -27,8 +26,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+import wqm.PluginManager;
 import wqm.config.AtlasSensor;
-import wqm.config.Station;
+import wqm.data.highstock.HighStockRecordConverter;
 import wqm.radio.RecordStorage.record.BaseRecord;
 import wqm.radio.RecordStorage.record.FloatRecord;
 import wqm.radio.RecordStorage.record.SalinityRecord;
@@ -60,7 +60,8 @@ import java.util.Map;
 public class WQMDataController extends BaseWQMController {
     private static Logger logger = Logger.getLogger(WQMDataController.class);
 
-    private Map<String, List<BaseRecord>> sensorData = new Hashtable<String, List<BaseRecord>>();
+    private Map<String, Map<String, List<BaseRecord>>> sensorData = new Hashtable<String, Map<String, List<BaseRecord>>>();
+    private Hashtable<Class, HighStockRecordConverter> recordConverters = new Hashtable<Class, HighStockRecordConverter>();
 
     public WQMDataController(StationManager stationManager, WQMConfig config) {
         super(stationManager, config);
@@ -68,6 +69,7 @@ public class WQMDataController extends BaseWQMController {
         stationManager.registerPacketHandler(new PacketHandler<DataUpload>() {
 
             public boolean handlePacket(PacketHandlerContext ctx, ZNetRxResponse xbeeResponse, DataUpload packet) {
+                logger.error("FFFF");
                 return handleDataUploadPacket(ctx, xbeeResponse, packet);
             }
 
@@ -75,6 +77,11 @@ public class WQMDataController extends BaseWQMController {
                 return DataUpload.PACKET_ID;
             }
         });
+
+        List<HighStockRecordConverter> converters = PluginManager.<HighStockRecordConverter>getPlugins(HighStockRecordConverter.class, null);
+        for (HighStockRecordConverter converter : converters) {
+            recordConverters.put(converter.getRecordType(), converter);
+        }
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/d/{stationAddress}/{sensorID}/{phaseID}")
@@ -92,6 +99,29 @@ public class WQMDataController extends BaseWQMController {
         }
 
         return new ModelAndView("", "", getCalibrationData(request.getSession(true), AtlasSensor.find(sensorID), offset));
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/d/{stationAddress}")
+    public ModelAndView sensorData(HttpServletRequest request,
+                                   @PathVariable String stationAddress) throws IOException {
+        long after = 0;
+        if (request.getParameter("after") != null) {
+            after = Long.parseLong(request.getParameter("after"));
+        }
+        Map<String, List<BaseRecord>> stationData = sensorData.get(stationAddress);
+        Map<String, List> result = new Hashtable<String, List>();
+        if (stationData != null) {
+            for (String sensor : stationData.keySet()) {
+                List<BaseRecord> _sensorData = stationData.get(sensor);
+                for (BaseRecord record : _sensorData) {
+                    if (record.getDate().getTime() > after) {
+                        HighStockRecordConverter converter = recordConverters.get(record.getClass());
+                        converter.convert(record, result);
+                    }
+                }
+            }
+        }
+        return new ModelAndView("", "", result);
     }
 
     private Object getCalibrationData(HttpSession session, AtlasSensor sensor, int count) {
@@ -120,24 +150,28 @@ public class WQMDataController extends BaseWQMController {
         String address = AddressUtil.getCompactStringAddress(xbeeResponse.getRemoteAddress64());
 
         for (BaseRecord record : packet.getRecords()) {
-            List<BaseRecord> data = getSensorData(String.format("%s_%s", address, getSensorName(record)));
+            List<BaseRecord> data = getSensorData(address, record);
             data.add(record);
-            while(data.size() > config.getMaxDataSize())
-            {
+            while (data.size() > config.getMaxDataSize()) {
                 data.remove(0);
             }
         }
         return true;
     }
 
-    private List<BaseRecord> getSensorData(String sensorName) {
-        List<BaseRecord> data = sensorData.get(sensorName);
-        if(data == null)
-        {
-            sensorData.put(sensorName, data = new ArrayList<BaseRecord>());
+    private List<BaseRecord> getSensorData(String station, BaseRecord record) {
+        Map<String, List<BaseRecord>> _data = sensorData.get(station);
+        if (_data == null) {
+            sensorData.put(station, _data = new Hashtable<String, List<BaseRecord>>());
+        }
+        String sensorName = getSensorName(record);
+        List<BaseRecord> data = _data.get(sensorName);
+        if (data == null) {
+            _data.put(sensorName, data = new ArrayList<BaseRecord>());
         }
         return data;
     }
+
 
     private String getSensorName(BaseRecord record) {
 
