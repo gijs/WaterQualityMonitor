@@ -24,7 +24,7 @@
 #include "Time.h"
 
 
-#define RECORD_TYPE_DOUBLE_RECORD 1
+#define RECORD_TYPE_FLOAT_RECORD 1
 #define RECORD_TYPE_ONE_WIRE_RECORD 2
 #define SALINITY_RECORD 3
 
@@ -39,26 +39,21 @@ struct R: BaseRecord
 	time_t time_stamp;
 };
 
-struct DoubleRecord: R
+struct FloatRecord: R
 {
-	int64_t characteristic;
-	int16_t exponent;
+	double value1;
+	double value2;
 
-	void setVal(float value, int16_t exponent);
-
-	DoubleRecord();//: record_type(RECORD_TYPE_DOUBLE_RECORD), id(0){};
+	FloatRecord();
 };
 
 struct OneWireRecord: BaseRecord
 {
 	int8_t id[8];
 	time_t time_stamp;
-	int64_t characteristic;
-	int16_t exponent;
+	double value;
 
-	OneWireRecord();//: record_type(RECORD_TYPE_ONE_WIRE_RECORD){};
-
-	void setVal(float value, int16_t exponent);
+	OneWireRecord();
 };
 
 struct SalinityRecord: R

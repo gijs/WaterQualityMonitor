@@ -37,9 +37,22 @@ int32_t upload_offset   = 43200; // 12 * 60 * 60
 
 int max_transmit_count = 5;
 
-int32_t max_record_size = max_record_size(sizeof(DoubleRecord), sizeof(OneWireRecord), sizeof(SalinityRecord));
+int32_t max_record_size = max_record_size(sizeof(FloatRecord), sizeof(OneWireRecord), sizeof(SalinityRecord));
 
 volatile bool is_downtime = true;
+
+void dumpHEX(double value)
+{
+	DEBUG(value);
+	DEBUG(": ");
+	byte* d = (byte*)&value;
+	for(int i = 0; i < sizeof(double); i++)
+	{
+		DEBUG_(d[i], HEX);
+		DEBUG(" ");
+	}
+	DEBUG_LN();
+}
 
 void setup()
 {
@@ -47,6 +60,10 @@ void setup()
 	START_DEBUG_STREAM(115200);
 	Serial2.begin(38400);
 	DEBUG_LN("Starting...");
+	DEBUG("Max Record Size: ");
+	DEBUG_LN(max_record_size);
+	delay(2000);
+
 	uint32_t device_status = Devices::initilize_devices(
 			4, 				//SD CS pin
 			32, 			//OneWire Bus
@@ -73,9 +90,10 @@ void setup()
 	status.flags = SENSORLINK_STATUS_FLAG_OK;
 	status.codes = 0;
 	Devices::send_status(&status);
-	downtime("Aligning to boundary");
-
-
+	if(analogRead(A1) <= XBEE_ASSOCIATE_THRESHOLD)
+	{
+		downtime("Aligning to boundary");
+	}
 }
 
 void loop()
@@ -98,6 +116,7 @@ void loop()
 
 void downtime(const char* message)
 {
+	unsigned long start = millis();
 	attachInterrupt(0, INT0_ISR, FALLING);
 	DEBUG(message);
 	DEBUG(" at: ");
@@ -112,6 +131,11 @@ void downtime(const char* message)
 	while(is_downtime){
 		XBeeUtil::wait_for_packet_type(Devices::xbee, 50, 0xFFFFF, NULL, Devices::queue_packet);
 		handle_queue();
+		if((millis() - start) >  (sample_interval * 2000))
+		{
+			is_downtime = false;
+			DEBUG_LN("Two periods spent in downtime, waking up anyway.");
+		}
 	}
 	detachInterrupt(0);
 	RTC.clearAlarmFlag(3);
@@ -143,7 +167,7 @@ void handle_queued_packet(XBeeResponse* packet)
 		switch(request->getData(0))
 		{
 		case SENSORLINK_CALIBRATE_PACKET:
-			Devices::calibrate(request, 60000);
+			Devices::calibrate(request, 600000);
 			break;
 		}
 

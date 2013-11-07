@@ -63,11 +63,14 @@ uint32_t Devices::initilize_devices(
 			if((code | ERROR_INVALID_MAGIC_NUMBER) > 0)
 			{
 				DEBUG_LN("The Record Storage had an invalid Magic Number.");
+				toRet |= ERROR_CODE_SD_FLAG;
 			}else if ((code | ERROR_WRITING_HEADER) > 0){
 				DEBUG_LN("The Record Storage could not write the header.");
+				toRet |= ERROR_CODE_SD_FLAG;
 			}else if((code | ERROR_ROW_SIZE_MISMATCH) > 0)
 			{
 				DEBUG_LN("The Record Storage row size does not match.");
+				toRet |= ERROR_CODE_SD_FLAG;
 			}
 		}
 	}else
@@ -82,7 +85,7 @@ uint32_t Devices::initilize_devices(
 	RTC.clearAlarmFlag(3);
 	RTC.setSQIMode(sqiModeAlarm1);
 
-	Devices::atlas = new Atlas(&atlas_bus, e_pin, so_pin, si_pin);
+	Devices::atlas = new Atlas(&atlas_bus, e_pin, so_pin, si_pin, true);
 	if (Devices::atlas->getSensorCount() == 0) {
 		toRet |= ERROR_CODE_ATLAS_FLAG;
 	}
@@ -212,6 +215,11 @@ bool start_sensor_calibration(CalibratePacket* calibrate_packet, CalibratePacket
 
 void accept_sensor_calibration(CalibratePacket* calibrate_packet)
 {
+	DEBUG_LN("ACCEPT");
+	_DEBUG("Sensor: ");
+	DEBUG_LN(calibrate_packet->sensor);
+	_DEBUG("Flags: ");
+	DEBUG_LN(calibrate_packet->flags);
 	switch (calibrate_packet->sensor) {
 	case PH:
 	{
@@ -227,7 +235,7 @@ void accept_sensor_calibration(CalibratePacket* calibrate_packet)
 			val = Four;
 			accept = true;
 			break;
-		case SENSORLINK_CALIBRATION_FLAG_ACCEPT_3:
+		case SENSORLINK_CALIBRATION_FLAG_ACCEPT_2:
 			val = Ten;
 			accept = true;
 			break;
@@ -265,6 +273,7 @@ void Devices::calibrate(ZBRxResponse* calibrate_request, unsigned long timeout)
 	CalibratePacket* calibrate_packet = (CalibratePacket*)calibrate_request->getData();
 	_DEBUG("Flags: ");
 	_DEBUG_LN(calibrate_packet->flags);
+	_DEBUG_LN(millis());
 	if((calibrate_packet->flags & SENSORLINK_CALIBRATION_FLAG_START_CALIBRATION) > 0)
 	{
 		_DEBUG("Calibrating sensor:");
@@ -301,7 +310,11 @@ void Devices::calibrate(ZBRxResponse* calibrate_request, unsigned long timeout)
 			}
 		}
 		DEBUG_LN("Finished Calibrating...");
+		_DEBUG_LN(millis());
 		Devices::atlas->endContinuous();
+	}else
+	{
+		DEBUG_LN("Stop Calibration request received whilst not in calibration mode.");
 	}
 }
 
@@ -443,7 +456,7 @@ void Devices::sample()
 		_DEBUG("Temperature: ");
 		DEBUG_LN(sample.temperature);
 
-		DoubleRecord rec;
+		FloatRecord rec;
 		double orp = Devices::atlas->getORP();
 		rec.time_stamp = RTC.get();
 		if(!isnan(orp))
@@ -452,8 +465,8 @@ void Devices::sample()
 			DEBUG_LN(orp);
 
 			rec.id = ORP;
-			rec.setVal(orp, 2);
-			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
+			rec.value1 = orp;
+			store->storeRecord((byte*)&rec, sizeof(FloatRecord));
 		}
 
 		double ph = Devices::atlas->getPH(sample.temperature);
@@ -464,8 +477,8 @@ void Devices::sample()
 			DEBUG_LN(ph);
 
 			rec.id = PH;
-			rec.setVal(ph, 2);
-			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
+			rec.value1 = ph;
+			store->storeRecord((byte*)&rec, sizeof(FloatRecord));
 		}
 
 		int32_t us = -1, ppm = -1, salinity = -1;
@@ -487,16 +500,20 @@ void Devices::sample()
 			store->storeRecord((byte*)&ec_rec, sizeof(SalinityRecord));
 		}
 
-		double _do = Devices::atlas->getDO(sample.temperature, ec_rec.salinity);
+		double _precent, _do;
+		double result = Devices::atlas->getDO(sample.temperature, ec_rec.salinity, _precent, _do);
 		rec.time_stamp = RTC.get();
-		if(!isnan(_do))
+		if(!isnan(result))
 		{
 			_DEBUG("DO: ");
-			DEBUG_LN(_do);
+			DEBUG(_do);
+			DEBUG(", %: ");
+			DEBUG_LN(_precent);
 
 			rec.id = DO;
-			rec.setVal(_do, 2);
-			store->storeRecord((byte*)&rec, sizeof(DoubleRecord));
+			rec.value1 = _precent;
+			rec.value2 = _do;
+			store->storeRecord((byte*)&rec, sizeof(FloatRecord));
 		}
 	}
 }
@@ -552,7 +569,7 @@ void Devices::log_ds18b20(uint8_t* address, time_t time, Sample &sample)
 	double temp = Devices::ds18b20->getTempC(address);
 	if(!isnan(temp) && temp < DS18B20_ERROR_TEMP)
 	{
-		rec.setVal(temp, 2);
+		rec.value = temp;
 		rec.time_stamp = time;
 		store->storeRecord((byte*)&rec, sizeof(OneWireRecord));
 		if(isnan(sample.temperature))

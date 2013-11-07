@@ -24,6 +24,7 @@ static char colon = ':';
 static char comma = ',';
 static char space = ' ';
 static char slash = '/';
+static char percent = '%';
 static char tab = '\t';
 static char carrage_return = '\r';
 

@@ -20,9 +20,10 @@
 #include "Atlas.h"
 
 
-Atlas::Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin/*, SensorPosition* sensorMap*/)
+Atlas::Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin, bool enableDOPSaturation)
 {
 	sensorCount = 0;
+	enableDOPS = enableDOPSaturation;
 	this->sensor_stream = sensor_stream;
 	this->e_pin = e_pin;
 	this->so_pin = so_pin;
@@ -82,6 +83,7 @@ void Atlas::parse_version(String &version, int port) {
 	case 'D':
 	case 'd':
 		sensor = &sensorMap[DO];
+		initilizeDO(port);
 		break;
 	default:
 		return;
@@ -113,6 +115,25 @@ void Atlas::parse_version(String &version, int port) {
 	sensor->port = port;
 	sensorCount++;
 	return;
+}
+
+void Atlas::initilizeDO(int port)
+{
+	sensor_stream->print(carrage_return);
+	sensor_stream->print(SINGLE_SAMPLE_COMMAND);
+	sensor_stream->print(carrage_return);
+	String result = sensor_stream->readStringUntil(carrage_return);
+	bool isDSO = (result.indexOf(comma) >= 0);
+
+	//Don't know what is disabling the port
+	enable();
+	if(enableDOPS ^ isDSO)
+	{
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(percent);
+			sensor_stream->print(carrage_return);
+			_DEBUG_LN("Toggled DOPS.");
+	}
 }
 
 double Atlas::getPH(double temperature)
@@ -172,7 +193,7 @@ double Atlas::getEC(double temperature, int32_t &us, int32_t &ppm, int32_t &sali
 
 }
 
-double Atlas::getDO(double temperature, int32_t us)
+double Atlas::getDO(double temperature, int32_t us, double &percentSaturation, double &_DO)
 {
 	if (select(DO)) {
 		if (!isnan(temperature)) {
@@ -185,7 +206,26 @@ double Atlas::getDO(double temperature, int32_t us)
 			sensor_stream->print(carrage_return);
 			String value = sensor_stream->readStringUntil(carrage_return);
 			disable();
-			return toDouble(value);
+			if(enableDOPS)
+			{
+				int pos = value.indexOf(comma);
+				if(pos < 0)
+				{
+					percentSaturation = NAN;
+					_DO = toDouble(value);
+				}else
+				{
+					String p = value.substring(0, pos);
+					String d = value.substring(pos + 1);
+					percentSaturation = toDouble(p);
+					_DO = toDouble(d);
+				}
+			}else
+			{
+				percentSaturation = NAN;
+				_DO = toDouble(value);
+			}
+			return 0;
 		}
 	}
 	return NAN;
@@ -258,6 +298,8 @@ bool Atlas::select(Sensor sensor)
 
 bool Atlas::select(int port)
 {
+	_DEBUG("Selecting port: ");
+	DEBUG_LN(port);
 	if((port & 1) > 0)
 	{
 		digitalWrite(so_pin, HIGH);

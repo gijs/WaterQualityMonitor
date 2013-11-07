@@ -19,17 +19,12 @@
 
 #include "Records.h"
 
-DoubleRecord::DoubleRecord()
+FloatRecord::FloatRecord()
 {
-	record_type = RECORD_TYPE_DOUBLE_RECORD;
+	record_type = RECORD_TYPE_FLOAT_RECORD;
 	id = 0;
-}
-void DoubleRecord::setVal(float value, int16_t exponent)
-{
-
-	characteristic = int64_t(double(value) * (pow(10, exponent)));
-
-	this->exponent = -1 * exponent;
+	value1 = INFINITY;
+	value2 = INFINITY;
 }
 
 OneWireRecord::OneWireRecord()
@@ -39,12 +34,6 @@ OneWireRecord::OneWireRecord()
 	{
 		id[i] = 0;
 	}
-}
-
-void OneWireRecord::setVal(float value, int16_t exponent)
-{
-	characteristic = int64_t(double(value) * (pow(10, exponent)));
-	this->exponent = -1 * exponent;
 }
 
 SalinityRecord::SalinityRecord() {

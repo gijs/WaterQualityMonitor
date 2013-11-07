@@ -62,6 +62,7 @@ private:
 	uint8_t e_pin, so_pin, si_pin;
 	SensorDescriptor sensorMap[ATLAS_MAX_SENSORS];
 	int8_t sensorCount;
+	boolean enableDOPS;
 
 	int32_t CMODE;
 
@@ -73,16 +74,18 @@ private:
 	void enable();
 	void disable();
 
+	void initilizeDO(int port);
+
 	double toDouble(String &value);
 	int split_string_count(char* toSplit, int length, char split_on[], int split_on_length);
 	int split_string(char* toSplit, char* result[], int result_length);
 
 public:
-	Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin/*, SensorPosition* sensorMap*/);
+	Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin, bool enableDOSaturation);
 
 	double getPH(double temperature);
 	double getEC(double temperature, int32_t &us, int32_t &ppm, int32_t &salinity);
-	double getDO(double temperature, int32_t us);
+	double getDO(double temperature, int32_t us, double &percentSaturation, double &DO);
 	double getORP();
 	String dumpPort(Sensor sensorToSelect);
 	int8_t getSensorCount();
