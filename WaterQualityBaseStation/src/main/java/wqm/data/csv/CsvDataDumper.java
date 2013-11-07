@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.data;
+package wqm.data.csv;
 
 import wqm.radio.RecordStorage.record.BaseRecord;
 
@@ -31,6 +31,6 @@ import java.io.IOException;
  * @author NigelB
  */
 public interface CsvDataDumper <T extends BaseRecord>{
-    Integer getPacketType();
-    void dumpData(File outputDir, String prefix, T record) throws IOException;
+    public Class getHandlerFor();
+    public void dumpData(File outputDir, String prefix, T record) throws IOException;
 }

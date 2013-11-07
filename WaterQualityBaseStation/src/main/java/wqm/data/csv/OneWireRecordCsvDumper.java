@@ -17,9 +17,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.data;
+package wqm.data.csv;
 
-import wqm.radio.RecordStorage.record.SalinityRecord;
+import wqm.radio.RecordStorage.record.OneWireRecord;
+import wqm.radio.util.Util;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,28 +28,29 @@ import java.io.IOException;
 
 /**
  * Date: 11/4/13
- * Time: 5:35 PM
+ * Time: 5:34 PM
  *
  * @author NigelB
  */
-public class SalinityRecordCsvDumper implements CsvDataDumper<SalinityRecord> {
-    public Integer getPacketType() {
-        return SalinityRecord.RECORD_TYPE;
+public class OneWireRecordCsvDumper implements CsvDataDumper<OneWireRecord> {
+    public Class getHandlerFor(){
+        return OneWireRecord.class;
     }
 
-    public synchronized void dumpData(File outputDir, String prefix, SalinityRecord record) throws IOException {
-        File output = new File(outputDir, prefix+"__EC.csv");
+    public synchronized void dumpData(File outputDir, String prefix, OneWireRecord record) throws IOException {
+        File output = new File(outputDir, prefix+"__Temperature.csv");
         FileOutputStream fos;
         if (!output.exists())
         {
             fos = new FileOutputStream(output);
-            fos.write("date,timestamp,id,ppm,salinity,uS\n".getBytes());
+            fos.write("date,timestamp,id,temperature\n".getBytes());
         }else
         {
             fos = new FileOutputStream(output, true);
         }
-        String row = String.format("%s,%d,%d,%d,%d,%d\n", record.getDate().toString(), record.getDate().getTime(), record.getId(), record.getPpm(), record.getSalinity(), record.getUs());
+        String row = String.format("%s,%d,%s,%s\n", record.getDate().toString(), record.getDate().getTime(), Util.toCompactHexString(record.getId()), record.getValue());
         fos.write(row.getBytes());
         fos.close();
+
     }
 }
