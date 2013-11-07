@@ -34,51 +34,43 @@ public class FloatRecord extends BaseRecord{
 
     public static final int ID_ADDRESS = 1;
     public static final int TIME_STAMP_ADDRESS = 2;
-    public static final int CHARACTERISTIC_ADDRESS = 6;
-    public static final int EXPONENT_ADDRESS = 14;
-
-//    int8_t id;
-//    time_t time_stamp;
-//    int8_t characteristic;
-//    int8_t mantissa;
+    public static final int VALUE1_ADDRESS = TIME_STAMP_ADDRESS + 4;
+    public static final int VALUE2_ADDRESS = VALUE1_ADDRESS + 4;
 
     int id;
     long time_stamp;
-    long characteristic;
-    int exponent;
-    Date date;
+    float value1;
+    float value2;
 
     public FloatRecord(int[] data) {
         super(data);
         id = data[ID_ADDRESS];
         time_stamp = Util.toUnsignedInt(Util.getInt(data, TIME_STAMP_ADDRESS));
-        characteristic = Util.getLong(data, CHARACTERISTIC_ADDRESS);
-//        mantissa = Util.getShort(data, MANTISSA_ADDRESS);
-        exponent = Util.getShort(data, EXPONENT_ADDRESS);
         date = Util.createDate(time_stamp);
-
+        value1 = Util.getIEEE754(data, VALUE1_ADDRESS);
+        value2 = Util.getIEEE754(data, VALUE2_ADDRESS);
     }
 
-    public double getValue() {
-        return ((double)characteristic) * Math.pow(10, exponent);
+    public float getValue1() {
+        return value1;
+    }
 
+    public float getValue2() {
+        return value2;
     }
 
     @Override
     public String toString() {
-        return String.format("FloatRecord{ id=%d, timestamp=%d, date=%s, characteristic=%d, exponent=%s, value=%s}",
+        return String.format("FloatRecord{ id=%d, timestamp=%d, date=%s, value1=%s, value2=%s}",
                 id,
                 time_stamp,
                 date,
-                characteristic,
-                exponent, getValue());
+                value1,
+                value2);
     }
 
     public int getId() {
         return id;
     }
 
-    public Date getDate() {
-        return date;
-    }
 }

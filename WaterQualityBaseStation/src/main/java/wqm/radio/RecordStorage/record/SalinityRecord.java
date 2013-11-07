@@ -42,9 +42,6 @@ public class SalinityRecord extends BaseRecord{
     long time_stamp;
     int us, ppm, salinity;
 
-    Date date;
-
-
     public SalinityRecord(int[] data) {
         super(data);
         id = data[ID_ADDRESS];
@@ -71,10 +68,6 @@ public class SalinityRecord extends BaseRecord{
 
     public int getSalinity() {
         return salinity;
-    }
-
-    public Date getDate() {
-        return date;
     }
 
     public int getId() {

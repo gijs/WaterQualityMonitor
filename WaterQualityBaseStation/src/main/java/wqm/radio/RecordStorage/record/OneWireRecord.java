@@ -21,8 +21,6 @@ package wqm.radio.RecordStorage.record;
 
 import wqm.radio.util.Util;
 
-import java.util.Date;
-
 /**
  * Date: 10/22/13
  * Time: 10:22 AM
@@ -33,46 +31,39 @@ public class OneWireRecord extends BaseRecord {
     public static final int RECORD_TYPE = 2;
 
     public static final int ID_ADDRESS = 1;
-    public static final int TIME_STAMP_ADDRESS = 9;
-    public static final int CHARACTERISTIC_ADDRESS = 13;
-    public static final int EXPONENT_ADDRESS = CHARACTERISTIC_ADDRESS + 8;
+    public static final int TIME_STAMP_ADDRESS = ID_ADDRESS + 8;
+    public static final int VALUE_ADDRESS = TIME_STAMP_ADDRESS + 4;
+
 
 //    int8_t id[8];
 //    time_t time_stamp;
-//    int8_t characteristic;
-//    int8_t mantissa;
+//    double value;
 
     int[] id = new int[8];
     long time_stamp;
-    long characteristic;
-    int exponent;
-    Date date;
+    float value;
 
     public OneWireRecord(int[] data) {
         super(data);
         System.arraycopy(data, ID_ADDRESS, id, 0, id.length);
         time_stamp = Util.toUnsignedInt(Util.getInt(data, TIME_STAMP_ADDRESS));
-        characteristic = data[CHARACTERISTIC_ADDRESS];
-        characteristic = Util.getLong(data, CHARACTERISTIC_ADDRESS);
-        exponent = Util.getShort(data, EXPONENT_ADDRESS);
         date = Util.createDate(time_stamp);
+        value = Util.getIEEE754(data, VALUE_ADDRESS);
     }
 
     public double getValue() {
-        return ((double)characteristic) * Math.pow(10, exponent);
+        return value;
 
     }
 
     @Override
     public String toString() {
-        return String.format("OneWireRecord{ id=%s, timestamp=%d, date=%s, characteristic=%d, exponent=%d, value=%s}", Util.toHexString(id), time_stamp, date, characteristic, exponent, getValue());
+        return String.format("OneWireRecord{ id=%s, timestamp=%d, date=%s, value=%s}", Util.toHexString(id), time_stamp, date, value);
     }
 
     public int[] getId() {
         return id;
     }
 
-    public Date getDate() {
-        return date;
-    }
+
 }

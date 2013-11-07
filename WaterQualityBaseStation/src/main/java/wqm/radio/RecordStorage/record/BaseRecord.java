@@ -20,7 +20,10 @@
 package wqm.radio.RecordStorage.record;
 
 import org.apache.log4j.Logger;
+import wqm.config.AtlasSensor;
 import wqm.radio.util.Util;
+
+import java.util.Date;
 
 /**
  * Date: 10/22/13
@@ -33,6 +36,7 @@ public class BaseRecord {
 //    int8_t record_type;
     protected int record_type;
     protected int data[];
+    protected Date date;
 
     public BaseRecord(int[] data) {
         this.data = data;
@@ -47,7 +51,13 @@ public class BaseRecord {
     {
         switch(data[0])
         {
+
             case FloatRecord.RECORD_TYPE:
+
+                if(data[1] == AtlasSensor.DO.getId())
+                {
+                    return new DORecord(data);
+                }
                 return new FloatRecord(data);
             case OneWireRecord.RECORD_TYPE:
                 return new OneWireRecord(data);
@@ -59,5 +69,9 @@ public class BaseRecord {
 
     public int getRecord_type() {
         return record_type;
+    }
+
+    public Date getDate() {
+        return date;
     }
 }
