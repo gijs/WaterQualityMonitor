@@ -69,7 +69,6 @@ public class WQMDataController extends BaseWQMController {
         stationManager.registerPacketHandler(new PacketHandler<DataUpload>() {
 
             public boolean handlePacket(PacketHandlerContext ctx, ZNetRxResponse xbeeResponse, DataUpload packet) {
-                logger.error("FFFF");
                 return handleDataUploadPacket(ctx, xbeeResponse, packet);
             }
 
