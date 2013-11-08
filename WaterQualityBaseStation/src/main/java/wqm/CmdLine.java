@@ -53,7 +53,7 @@ public class CmdLine {
         listen = OptionBuilder.withArgName("listen")
                 .hasArg()
                 .withLongOpt("listen")
-                .withDescription(String.format("The address to listen on, default: %s", Defaults.ListenAddress.getDefault()))
+                .withDescription("The address to listen on.")
                 .create('l');
 
         port = OptionBuilder.withArgName("port")
