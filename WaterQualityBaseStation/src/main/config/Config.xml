@@ -19,7 +19,7 @@
   -->
 
 
-<Config maxWebDataSize="720">
+<Config maxWebDataSize="60">
     <Data rotatePeriod="86400000" prefixFormat="yyyy_MMMMM_dd_HH-mm-ss.S_Z" dataDir="data"/>
     <Radios>
         <Port retries="5" port="/dev/ttyUSB1" baud="57600"/>

@@ -19,7 +19,7 @@
 
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<mytags:layout title="Monitoring ${station.getDisplayName()}" view="m">
+<mytags:layout title="Monitoring ${station.getDisplayName()}" view="m" noMenu="true">
 
 <jsp:attribute name="head">
     <script src="/js/seriesMap.js"></script>
@@ -28,7 +28,7 @@
 
 
     <jsp:body>
-        <div id="monitor_content" class="span5">
+        <div id="monitor_content" >
             <H1>Monitoring ${station.getDisplayName()}</H1>
             <br/>
             <div id="monitor_graph"></div>

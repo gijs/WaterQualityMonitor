@@ -1,9 +1,10 @@
 <%@tag description="page layout" %>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@attribute name="head" fragment="true"%>
-<%@attribute name="station_nav" fragment="true"%>
-<%@attribute name="title" required="true" type="java.lang.String"%>
-<%@attribute name="view" required="true" type="java.lang.String"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@attribute name="head" fragment="true" %>
+<%@attribute name="station_nav" fragment="true" %>
+<%@attribute name="title" required="true" type="java.lang.String" %>
+<%@attribute name="view" required="true" type="java.lang.String" %>
+<%@attribute name="noMenu" required="false" type="java.lang.Boolean" %>
 <!DOCTYPE html>
 <%--
   ~ Water Quality Monitor Java Basestation
@@ -32,7 +33,7 @@
     <link rel="stylesheet" href="/css/bootstrap.min.css"/>
     <script src="/js/jquery.js"></script>
     <script src="/js/highstock.js"></script>
-    <jsp:invoke fragment="head" />
+    <jsp:invoke fragment="head"/>
 </head>
 <body>
 <div class="navbar">
@@ -47,42 +48,47 @@
 
 <div class="container-fluid">
     <div class="row-fluid">
-        <div id="side-bar"  class="span2">
-            <table  id="server_commands"  class='table'>
-                <thead>
-                <tr>
-                    <th>Stations</th>
-                </tr>
 
-                <c:forEach var="entry" items="${stations}">
-                <tr>
-                    <td>
-                        <a href="/wqm/${view}/${entry.getCompactAddress()}">${entry.getDisplayName()}</a>
-                        <c:if test="${!(entry.getCommonName().length() > 0)}"><br/><a href="/wqm/r/${entry.getCompactAddress()}">Rename</a></c:if>
-                    </td>
+            <c:if test="${empty noMenu}">
+                <div id="side-bar" class="span2">
+                    <table id="server_commands" class='table'>
+                        <thead>
+                        <tr>
+                            <th>Stations</th>
+                        </tr>
 
-                </c:forEach>
-                </tr>
-                </thead>
-            </table>
-        </div>
+                        <c:forEach var="entry" items="${stations}">
+                        <tr>
+                            <td>
+                                <a href="/wqm/${view}/${entry.getCompactAddress()}">${entry.getDisplayName()}</a>
+                                <c:if test="${!(entry.getCommonName().length() > 0)}"><br/><a
+                                        href="/wqm/r/${entry.getCompactAddress()}">Rename</a></c:if>
+                            </td>
+
+                            </c:forEach>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </c:if>
+
         <div>
             <c:set var="view" scope="session" value="${view}"/>
-        <div id="messages">
-            <c:if test="${not empty success_message}">
-                <span id="success_message">Success: ${success_message}</span><BR/><BR/>
-            </c:if>
-            <c:if test="${not empty message}">
-                <span id="message">${message}</span><BR/><BR/>
-            </c:if>
-            <c:if test="${not empty warning_message}">
-                <span id="warning_message">Warning: ${warning_message}</span><BR/><BR/>
-            </c:if>
-            <c:if test="${not empty error_message}">
-                <span id="error_message">Error: ${error_message}</span><BR/><BR/>
-            </c:if>
-        </div>
-            <jsp:doBody />
+            <div id="messages">
+                <c:if test="${not empty success_message}">
+                    <span id="success_message">Success: ${success_message}</span><BR/><BR/>
+                </c:if>
+                <c:if test="${not empty message}">
+                    <span id="message">${message}</span><BR/><BR/>
+                </c:if>
+                <c:if test="${not empty warning_message}">
+                    <span id="warning_message">Warning: ${warning_message}</span><BR/><BR/>
+                </c:if>
+                <c:if test="${not empty error_message}">
+                    <span id="error_message">Error: ${error_message}</span><BR/><BR/>
+                </c:if>
+            </div>
+            <jsp:doBody/>
         </div>
     </div>
 

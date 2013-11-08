@@ -109,6 +109,7 @@ function updateData(chart) {
                 chart.series[id].setData(dataSeries, true);
                 _series.first = false;
                 console.log("FIRST");
+                chart.xAxis[0].setExtremes(dataSeries[dataSeries.length - 1][0] - (1000 * 60 * 60), dataSeries[dataSeries.length - 1][0] + 1000);
 
             } else {
 

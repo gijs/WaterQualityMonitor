@@ -2,7 +2,8 @@
 Release*
 lib/Time*
 lib/OneWire*
-lib/XBee*
+lib/XBee/*
 .cproject
 .project
 .settings
+target*

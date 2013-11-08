@@ -27,6 +27,10 @@
 
 }
 
+#monitor_content H1 {
+    text-align: center
+}
+
 #ph_warning
 {
     visibility: hidden;
