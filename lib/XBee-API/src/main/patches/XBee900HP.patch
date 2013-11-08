@@ -1,0 +1,21 @@
+Index: com/rapplogic/xbee/api/HardwareVersion.java
+===================================================================
+--- com/rapplogic/xbee/api/HardwareVersion.java	(revision 322)
++++ com/rapplogic/xbee/api/HardwareVersion.java	(working copy)
+@@ -34,6 +34,7 @@
+ 		SERIES2("Series 2"),
+ 		SERIES2_PRO("Series 2 Pro"),
+ 		SERIES2B_PRO("Series 2B Pro"),
++		SERIES3B_PRO_900HP("Series 3B Pro 900HP"),
+ 		UNKNOWN("Unknown");
+ 		
+ 		private String name;
+@@ -68,6 +69,8 @@
+ 			return RadioType.SERIES2_PRO;
+ 		case 0x1e:
+ 			return RadioType.SERIES2B_PRO;
++		case 0x23:
++			return RadioType.SERIES3B_PRO_900HP;
+ 		}
+ 
+ 		return RadioType.UNKNOWN;
