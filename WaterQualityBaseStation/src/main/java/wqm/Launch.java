@@ -39,6 +39,7 @@ public class Launch {
         CommandLine cmd = CmdLine.parse("wqm", CmdLine.getOptions(), args);
         WQMConfig config = CmdLine.createServerConfig(cmd);
         File data = new File(config.getConfigDir());
+        System.out.println(config.getDataConfig().getDataOutputDirectory());
         data.mkdirs();
         HTTPServer server = new HTTPServer(config);
         config.addShutdownCallback(new Runnable() {
