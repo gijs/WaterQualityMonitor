@@ -34,6 +34,17 @@
             <includes>
                 <include>**/**</include>
             </includes>
+            <excludes>
+                <exclude>bin/**</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/target/install</directory>
+            <outputDirectory>/wqm</outputDirectory>
+            <includes>
+                <include>bin/**</include>
+            </includes>
+            <fileMode>0755</fileMode>
         </fileSet>
     </fileSets>
 </assembly>

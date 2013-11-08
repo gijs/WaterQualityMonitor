@@ -167,12 +167,12 @@
                             <resources>
                                 <resource>
                                     <directory>src/main</directory>
-                                    <filtering>true</filtering>
-                                    <include>conf/**/*</include>
+                                    <filtering>false</filtering>
+                                    <include>config/**/*</include>
                                 </resource>
                                 <resource>
                                     <directory>src/main</directory>
-                                    <filtering>faile</filtering>
+                                    <filtering>false</filtering>
                                     <include>bin/**/*</include>
                                 </resource>
                             </resources>
