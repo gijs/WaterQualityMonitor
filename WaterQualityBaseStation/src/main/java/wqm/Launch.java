@@ -24,6 +24,8 @@ import org.apache.log4j.Logger;
 import wqm.web.server.HTTPServer;
 import wqm.web.server.WQMConfig;
 
+import java.io.File;
+
 /**
  * Date: 10/21/13
  * Time: 2:05 PM
@@ -36,6 +38,8 @@ public class Launch {
     public static void main(String[] args) throws Exception {
         CommandLine cmd = CmdLine.parse("wqm", CmdLine.getOptions(), args);
         WQMConfig config = CmdLine.createServerConfig(cmd);
+        File data = new File(config.getConfigDir());
+        data.mkdirs();
         HTTPServer server = new HTTPServer(config);
         config.addShutdownCallback(new Runnable() {
             public void run() {
