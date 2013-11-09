@@ -27,7 +27,7 @@ package wqm.constants;
 public enum Defaults {
     ConfigDir("config"),
     ListenPort("8080"),
-    ListenAddress("localhost");
+    ListenAddress(null);
 
 
     private String _default;
