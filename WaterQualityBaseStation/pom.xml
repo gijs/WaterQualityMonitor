@@ -12,6 +12,7 @@
         <spring.version>3.1.2.RELEASE</spring.version>
         <external.resources>src/main/external</external.resources>
         <web.root>${external.resources}/wqm-war/</web.root>
+        <web.inf>wqm-war/WEB-INF</web.inf>
     </properties>
 
     <dependencies>
@@ -99,7 +100,13 @@
 
     <build>
         <resources>
-            <resource><directory>src/main/resources</directory></resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <!--<exclude>**/views/**/*.jsp</exclude>-->
+                    <exclude>wqm-war/WEB-INF/web.xml</exclude>
+                </excludes>
+            </resource>
             <resource><directory>${external.resources}</directory></resource>
         </resources>
         <plugins>
@@ -230,6 +237,26 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-jspc-maven-plugin</artifactId>
+                <version>9.0.6.v20130930</version>
+                <executions>
+                    <execution>
+                        <id>jspc</id>
+                        <goals>
+                            <goal>jspc</goal>
+                        </goals>
+                        <configuration>
+                            <webAppSourceDirectory>src/main/resources/wqm-war</webAppSourceDirectory>
+                            <webXml>src/main/resources/${web.inf}/web.xml</webXml>
+                            <keepSources>true</keepSources>
+                            <packageRoot>wqm.web</packageRoot>
+                            <webXmlFragment>${project.build.outputDirectory}/${web.inf}/webfrag.xml</webXmlFragment>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
