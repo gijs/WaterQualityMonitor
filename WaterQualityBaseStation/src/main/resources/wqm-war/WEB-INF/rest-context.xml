@@ -30,43 +30,42 @@
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
 
 
-    <context:annotation-config />
+    <context:annotation-config/>
     <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
-
 
 
     <bean id="wqmConfig" class="wqm.web.bean.ConfigBean"/>
 
     <util:list id="packetHandlers">
         <bean id="stationData" class="wqm.radio.SensorLink.handlers.FileSystemDataHandler">
-            <constructor-arg  value="#{wqmConfig.config}"/>
+            <constructor-arg value="#{wqmConfig.config}"/>
         </bean>
         <bean class="wqm.radio.SensorLink.handlers.SinkSearchHandler"/>
     </util:list>
 
 
     <bean id="stationManager" class="wqm.radio.StationManager">
-        <constructor-arg  value="#{wqmConfig.config}"/>
+        <constructor-arg value="#{wqmConfig.config}"/>
         <constructor-arg ref="packetHandlers"/>
     </bean>
 
     <bean class="wqm.web.server.controller.WQMServerController">
-        <constructor-arg  ref="stationManager"/>
-        <constructor-arg  value="#{wqmConfig.config}"/>
+        <constructor-arg ref="stationManager"/>
+        <constructor-arg value="#{wqmConfig.config}"/>
     </bean>
     <bean class="wqm.web.server.controller.WQMDataController">
-        <constructor-arg  ref="stationManager"/>
-        <constructor-arg  value="#{wqmConfig.config}"/>
+        <constructor-arg ref="stationManager"/>
+        <constructor-arg value="#{wqmConfig.config}"/>
     </bean>
 
     <bean class="wqm.web.server.controller.WQMCalibrationController">
-        <constructor-arg  ref="stationManager"/>
-        <constructor-arg  value="#{wqmConfig.config}"/>
+        <constructor-arg ref="stationManager"/>
+        <constructor-arg value="#{wqmConfig.config}"/>
     </bean>
 
     <bean class="wqm.web.server.controller.WQMMonitorController">
-        <constructor-arg  ref="stationManager"/>
-        <constructor-arg  value="#{wqmConfig.config}"/>
+        <constructor-arg ref="stationManager"/>
+        <constructor-arg value="#{wqmConfig.config}"/>
     </bean>
 
     <!--Views-->
@@ -84,9 +83,9 @@
             <list>
                 <bean class="org.springframework.web.servlet.view.BeanNameViewResolver"/>
                 <bean class="org.springframework.web.servlet.view.UrlBasedViewResolver">
-                <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
-                <property name="prefix" value="/views/"/>
-                <property name="suffix" value=".jsp"/>
+                    <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+                    <property name="prefix" value="/views/"/>
+                    <property name="suffix" value=".jsp"/>
                 </bean>
 
             </list>
