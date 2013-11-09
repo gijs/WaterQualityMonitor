@@ -192,9 +192,11 @@ public class WQMCalibrationController extends BaseWQMController {
     @RequestMapping(method = RequestMethod.GET, value = "/r/{stationAddress}")
     public ModelAndView renameStation(HttpServletRequest request, HttpServletResponse response,
                                       @PathVariable String stationAddress) throws IOException {
+
         Station station = validateStation(request, stationAddress);
         String name = request.getParameter("name");
 
+        logger.debug(String.format("Renaming station: %s", stationAddress));
         if (name != null) {
             config.renameStation(station, request.getParameter("name"));
             response.sendRedirect("/");
