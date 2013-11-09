@@ -38,8 +38,7 @@ public class Launch {
     public static void main(String[] args) throws Exception {
         CommandLine cmd = CmdLine.parse("wqm", CmdLine.getOptions(), args);
         WQMConfig config = CmdLine.createServerConfig(cmd);
-        File data = new File(config.getConfigDir());
-        System.out.println(config.getDataConfig().getDataOutputDirectory());
+        File data = new File(config.getDataConfig().getDataOutputDirectory());
         data.mkdirs();
         HTTPServer server = new HTTPServer(config);
         config.addShutdownCallback(new Runnable() {
