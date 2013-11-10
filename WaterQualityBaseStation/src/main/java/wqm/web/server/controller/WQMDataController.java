@@ -127,6 +127,7 @@ public class WQMDataController extends BaseWQMController {
 
         switch (sensor) {
             case PH:
+            case ORP:
                 ArrayList<CalibratePacket> packets = stationManager.getCalibrationSessionManager().getCalibrationSessionData(session);
                 if (packets == null) {
                     throw new _404();
@@ -134,10 +135,9 @@ public class WQMDataController extends BaseWQMController {
                 ArrayList data = new ArrayList();
                 for (int i = count; i < packets.size(); i++) {
                     CalibratePacket packet = packets.get(i);
-                    data.add(new Object[]{packet.getTime(), packet.getValue(packet.getValue1(), packet.getExponent1())});
+                    data.add(new Object[]{packet.getTime(), packet.getValue1()});
                 }
                 return data;
-
             case DO:
                 break;
         }

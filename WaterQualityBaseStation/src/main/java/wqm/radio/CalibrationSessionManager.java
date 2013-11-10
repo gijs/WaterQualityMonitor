@@ -26,6 +26,7 @@ import wqm.config.AtlasSensor;
 import wqm.config.Station;
 import wqm.radio.SensorLink.PacketHandlerContext;
 import wqm.radio.SensorLink.handlers.PacketHandler;
+import wqm.radio.SensorLink.message.CalibrationMessage;
 import wqm.radio.SensorLink.packets.CalibratePacket;
 import wqm.radio.util.AddressUtil;
 import wqm.web.exceptions.AlreadyRunningAnotherCalibrationPhase;
@@ -46,16 +47,13 @@ public class CalibrationSessionManager implements PacketHandler<CalibratePacket>
 
     public boolean handlePacket(PacketHandlerContext ctx, ZNetRxResponse xbeeResponse, CalibratePacket packet) {
         String address = AddressUtil.getCompactStringAddress(xbeeResponse.getRemoteAddress64());
-        if(calibrationSessions.containsKey(address))
-        {
+        logger.trace(packet);
+        if (calibrationSessions.containsKey(address)) {
             ArrayList<CalibratePacket> data = getCalibrationSessionData(address);
-            if(data != null)
-            {
+            if (data != null) {
                 data.add(packet);
-            }else
-            {
+            } else {
                 logger.warn("Received calibration data when no calibration session exists: ");
-                logger.trace(packet);
             }
 
         }
@@ -67,12 +65,10 @@ public class CalibrationSessionManager implements PacketHandler<CalibratePacket>
     }
 
 
-
     public ArrayList<CalibratePacket> getCalibrationSessionData(String address) {
-            HttpSession session = calibrationSessions.get(address);
+        HttpSession session = calibrationSessions.get(address);
         ArrayList<CalibratePacket> data = null;
-        if((data = (ArrayList<CalibratePacket>) session.getAttribute("calibration_data")) == null)
-        {
+        if ((data = (ArrayList<CalibratePacket>) session.getAttribute("calibration_data")) == null) {
             data = new ArrayList<CalibratePacket>();
             session.setAttribute("calibration_data", data);
         }
@@ -80,11 +76,9 @@ public class CalibrationSessionManager implements PacketHandler<CalibratePacket>
     }
 
 
-
     public ArrayList<CalibratePacket> getCalibrationSessionData(HttpSession session) {
         ArrayList<CalibratePacket> data = null;
-        if((data = (ArrayList<CalibratePacket>) session.getAttribute("calibration_data")) == null)
-        {
+        if ((data = (ArrayList<CalibratePacket>) session.getAttribute("calibration_data")) == null) {
             data = new ArrayList<CalibratePacket>();
             session.setAttribute("calibration_data", data);
         }
@@ -97,36 +91,43 @@ public class CalibrationSessionManager implements PacketHandler<CalibratePacket>
 
     public void stopCalibrationSession(String compactAddress) {
         HttpSession session = calibrationSessions.remove(compactAddress);
-        if(session != null)
-        {
+        if (session != null) {
             session.removeAttribute("calibration_data");
         }
     }
 
-    public boolean startCalibrationPhase(HttpSession session, BaseStation baseStation, Station station, AtlasSensor sensor, int phaseID) throws AlreadyRunningAnotherCalibrationPhase {
+
+
+    public boolean startCalibrationPhase(HttpSession session, BaseStation baseStation, CalibrationMessage message, int phaseID) throws AlreadyRunningAnotherCalibrationPhase {
         Integer _phaseID = (Integer) session.getAttribute("lock_phase");
-        if(_phaseID == null)
-        {
+        if (_phaseID == null) {
             session.setAttribute("lock_phase", _phaseID);
-        }else if(_phaseID != phaseID)
-        {
+        } else if (_phaseID != phaseID) {
             throw new AlreadyRunningAnotherCalibrationPhase(phaseID);
         }
-        CalibratePacket packet = new CalibratePacket(sensor.getId(), CalibratePacket.START_CALIBRATION, 0, 0);
-        if(baseStation.sendCalibrationPacket(station.getCompactAddress(), packet))
-        {
-            startCalibrationSession(station.getCompactAddress(), session);
-            logger.info(String.format("Calibration quit command sent: %s", packet.toString()));
+
+        if (baseStation.sendCalibrationPacket(message)) {
+            startCalibrationSession(message.getTo().getCompactAddress(), session);
+            logger.info(String.format("Calibration quit command sent: %s", message.getPacket().toString()));
         }
         return false;
     }
 
 
-    public boolean acceptCalibrationPhase(BaseStation baseStation, Station station, AtlasSensor sensor, int phaseID) {
-        logger.info("Accepting calibration Phase: "+phaseID);
+    /**
+     * @param baseStation
+     * @param station
+     * @param sensor
+     * @param phaseID
+     * @param v1          - if unused set to Float.POSITIVE_INFINITY
+     * @param v2          - if unused set to Float.POSITIVE_INFINITY
+     * @param v3          - if unused set to Float.POSITIVE_INFINITY
+     * @return
+     */
+    public boolean acceptCalibrationPhase(boolean endsPhase, BaseStation baseStation, Station station, AtlasSensor sensor, int phaseID, float v1, float v2, float v3) {
+        logger.info("Accepting calibration Phase: " + phaseID);
         int code = CalibratePacket.STOP_CALIBRATION;
-        switch(phaseID)
-        {
+        switch (phaseID) {
             case 0:
                 code = CalibratePacket.CALIBRATION_PHASE0;
                 break;
@@ -143,20 +144,25 @@ public class CalibrationSessionManager implements PacketHandler<CalibratePacket>
                 code = CalibratePacket.CALIBRATION_PHASE4;
                 break;
         }
-        CalibratePacket packet = new CalibratePacket(sensor.getId(), code, 0, 0);
-        if(baseStation.sendCalibrationPacket(station.getCompactAddress(), packet))
-        {
-            stopCalibrationSession(station.getCompactAddress());
+        CalibratePacket packet = new CalibratePacket(sensor.getId(), code);
+        CalibrationMessage message = new CalibrationMessage(station, packet);
+        packet.setValue1(v1);
+        packet.setValue2(v2);
+        packet.setValue3(v3);
+        if (baseStation.sendCalibrationPacket(message)) {
             logger.info(String.format("Calibration Accept Command sent: %s", packet.toString()));
+            if (endsPhase) {
+                stopCalibrationSession(station.getCompactAddress());
+            }
         }
         return true;
     }
 
 
     public boolean quitCalibrationPhase(BaseStation baseStation, Station station, AtlasSensor sensor) {
-        CalibratePacket packet = new CalibratePacket(sensor.getId(), CalibratePacket.STOP_CALIBRATION, 0, 0);
-        if(baseStation.sendCalibrationPacket(station.getCompactAddress(), packet))
-        {
+        CalibratePacket packet = new CalibratePacket(sensor.getId(), CalibratePacket.STOP_CALIBRATION);
+        CalibrationMessage message = new CalibrationMessage(station, packet);
+        if (baseStation.sendCalibrationPacket(message)) {
             stopCalibrationSession(station.getCompactAddress());
         }
         return true;

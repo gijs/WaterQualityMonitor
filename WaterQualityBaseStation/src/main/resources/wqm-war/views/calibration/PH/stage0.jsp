@@ -19,7 +19,7 @@
 
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<mytags:layout title="Calibrate ${station.getCommonName()} PH" view="calibrate">
+<mytags:layout title="Calibrate ${station.getCommonName()} PH" view="calibrate" caching="false">
 
 <jsp:attribute name="head">
     <script src="/js/calibrate_ph.js"></script>

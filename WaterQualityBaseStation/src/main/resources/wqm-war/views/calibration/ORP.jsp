@@ -27,7 +27,28 @@
 
     <jsp:body>
         <div id="calibrate_content" class="span5">
-            <H1>Oxidation Reduction Potential</H1>
+            <H3>Oxidation Reduction Potential (ORP)</H3>
+
+            <p>To calibrate the ORP sensor, it is placed into the calibration solution and sampled continuity. Using the
+                + and - buttons adjust the output of the sensor to match the value of the calibration solution.</p>
+
+            <div id="calibration_button_1">
+                <table>
+                    <tr>
+                        <td>
+                            <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0/quit">
+                                <button class="btn btn-default" type="submit">Quit</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0">
+                                <button class="btn btn-default" type="submit">Next</button>
+                            </form>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
         </div>
     </jsp:body>
 </mytags:layout>

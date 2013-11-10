@@ -150,4 +150,14 @@ public class Util {
         ByteBuffer buf = littleEndianGrab(data, offset, 4);
         return buf.getFloat(0);
     }
+
+    public static void putIEEE754(int[] data, int offset, float value) {
+        byte _data[] = new byte[4];
+        ByteBuffer buf = ByteBuffer.wrap(_data);
+        buf.putFloat(value);
+
+        for (int pos = offset, count = 3; count >= 0; pos++, count--) {
+            data[pos] = _data[count];
+        }
+    }
 }

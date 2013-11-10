@@ -28,6 +28,7 @@ import wqm.config.AtlasSensor;
 import wqm.config.Port;
 import wqm.config.Station;
 import wqm.radio.SensorLink.handlers.PacketHandler;
+import wqm.radio.SensorLink.message.CalibrationMessage;
 import wqm.radio.SensorLink.packets.CalibratePacket;
 import wqm.web.exceptions.AlreadyHaveLockOnAnotherSensor;
 import wqm.web.exceptions.AlreadyRunningAnotherCalibrationPhase;
@@ -180,20 +181,33 @@ public class StationManager implements DisposableBean, HttpSessionListener /*, P
     }
 
     public boolean startCalibrationPhase(HttpSession session, Station station, AtlasSensor sensor, int phaseID) throws AlreadyRunningAnotherCalibrationPhase {
+        CalibratePacket packet = new CalibratePacket(sensor.getId(), CalibratePacket.START_CALIBRATION);
+        CalibrationMessage message = new CalibrationMessage(station, packet);
+        return startCalibrationPhase(session, message, phaseID);
+
+    }
+
+    public boolean startCalibrationPhase(HttpSession session, CalibrationMessage message, int phaseID) throws AlreadyRunningAnotherCalibrationPhase {
+
         for (Pair<Thread, BaseStation> baseStation : baseStations) {
-            if (baseStation.getB().hasStation(station.getCompactAddress())) {
-                return calibrationSessionManager.startCalibrationPhase(session, baseStation.getB(), station, sensor, phaseID);
+            if (baseStation.getB().hasStation(message.getTo().getCompactAddress())) {
+                return calibrationSessionManager.startCalibrationPhase(session, baseStation.getB(), message, phaseID);
             }
         }
         return false;
     }
 
+    public boolean acceptCalibrationPhase(HttpSession session, boolean endsPhase, Station station, AtlasSensor sensor, int phaseID) {
+        return acceptCalibrationPhase(session, endsPhase, station, sensor, phaseID, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+    }
 
-    public boolean acceptCalibrationPhase(HttpSession session, Station station, AtlasSensor sensor, int phaseID) {
+    public boolean acceptCalibrationPhase(HttpSession session, boolean endsPhase, Station station, AtlasSensor sensor, int phaseID, float v1, float v2, float v3) {
         for (Pair<Thread, BaseStation> baseStation : baseStations) {
             if (baseStation.getB().hasStation(station.getCompactAddress())) {
-                boolean toRet = calibrationSessionManager.acceptCalibrationPhase(baseStation.getB(), station, sensor, phaseID);
-                session.removeAttribute("lock_phase");
+                boolean toRet = calibrationSessionManager.acceptCalibrationPhase(endsPhase, baseStation.getB(), station, sensor, phaseID, v1, v2, v3);
+                if (endsPhase) {
+                    session.removeAttribute("lock_phase");
+                }
                 return toRet;
             }
         }

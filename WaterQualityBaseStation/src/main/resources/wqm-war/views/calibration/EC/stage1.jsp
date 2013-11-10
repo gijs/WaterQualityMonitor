@@ -19,37 +19,39 @@
 
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<mytags:layout title="Calibrate ${station.getCommonName()} PH" view="calibrate">
+<mytags:layout title="Calibrate ${station.getCommonName()} EC" view="calibrate" caching="false">
 
 <jsp:attribute name="head">
+    <script src="/js/calibrate_ec.js"></script>
 </jsp:attribute>
 
 
     <jsp:body>
-
         <div id="calibrate_content" class="span5">
-            <H3>Dissolved Oxygen (DO)</H3>
-
-            <p>To calibrate the DO sensor you must first dip the DO sensor in water to wet it. Once this is done take it out of the water and press the next button below.</p>
+            <H3>${station.getCommonName()} EC Calibration - Dry Calibration</H3>
+            <P>This stage need to be done with a dry sensor. Press accept when you are happy to proceed.</P>
+            <div id="ec_graph"></div>
 
             <div id="calibration_button_1">
-                <table>
+
                     <tr>
-                        <td>
+                        <td style="padding-top: 50px">
                             <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0/quit">
                                 <button class="btn btn-default" type="submit">Quit</button>
                             </form>
                         </td>
                         <td>
-                            <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0">
-                                <button class="btn btn-default" type="submit">Next</button>
+                            <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/accept">
+                                <button class="btn btn-default" type="submit">Accept</button>
                             </form>
                         </td>
                     </tr>
                 </table>
             </div>
 
+            <script>
+                initEC("EC Calibration", "ec_graph", "/wqm/d/${station.getCompactAddress()}/${sensor.getId()}/${phase}")
+            </script>
         </div>
-
     </jsp:body>
 </mytags:layout>

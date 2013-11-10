@@ -19,7 +19,7 @@
 
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<mytags:layout title="Calibrate ${station.getCommonName()} ${sensor.getLongName()}" view="calibrate">
+<mytags:layout title="Calibrate ${station.getCommonName()} ${sensor.getLongName()}" view="calibrate" caching="false">
 
 <jsp:attribute name="head">
 </jsp:attribute>
@@ -27,14 +27,29 @@
 
     <jsp:body>
         <div id="calibrate_content" class="span5">
-            <H1>PH</H1>
-
             <div id="ph_instructions">
                 <h3>PH Calibration</h3>
-                Calibration of the PH sensor is a three stage process, requiring the three Atlas Scientific PH
-                calibration solutions.
+                <p>
+                Calibration of the PH sensor is a three stage process, requiring the three Atlas Scientific PH calibration solutions.
+                </p>
             </div>
-            <a href="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0">Next</a>
+                <%--<a href="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0">Next</a>--%>
+            <div id="calibration_button_1">
+            <table>
+                <tr>
+                    <td>
+                        <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0/quit">
+                            <button class="btn btn-default" type="submit">Quit</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0">
+                            <button class="btn btn-default" type="submit">Next</button>
+                        </form>
+                    </td>
+                </tr>
+            </table>
+            </div>
         </div>
     </jsp:body>
 </mytags:layout>

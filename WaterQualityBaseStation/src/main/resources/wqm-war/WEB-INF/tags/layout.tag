@@ -5,6 +5,7 @@
 <%@attribute name="title" required="true" type="java.lang.String" %>
 <%@attribute name="view" required="true" type="java.lang.String" %>
 <%@attribute name="noMenu" required="false" type="java.lang.Boolean" %>
+<%@attribute name="caching" required="false" type="java.lang.Boolean" %>
 <!DOCTYPE html>
 <%--
   ~ Water Quality Monitor Java Basestation
@@ -24,6 +25,17 @@
   ~ with this program; if not, write to the Free Software Foundation, Inc.,
   ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
   --%>
+
+
+<c:if test="${ not empty caching}">
+    <c:if test="${caching}">
+    <%
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setDateHeader("Expires", -1);
+    %>
+    </c:if>
+</c:if>
 
 <html>
 <head>
@@ -49,28 +61,28 @@
 <div class="container-fluid">
     <div class="row-fluid">
 
-            <c:if test="${empty noMenu}">
-                <div id="side-bar" class="span2">
-                    <table id="server_commands" class='table'>
-                        <thead>
-                        <tr>
-                            <th>Stations</th>
-                        </tr>
+        <c:if test="${empty noMenu}">
+            <div id="side-bar" class="span2">
+                <table id="server_commands" class='table'>
+                    <thead>
+                    <tr>
+                        <th>Stations</th>
+                    </tr>
 
-                        <c:forEach var="entry" items="${stations}">
-                        <tr>
-                            <td>
-                                <a href="/wqm/${view}/${entry.getCompactAddress()}">${entry.getDisplayName()}</a>
-                                <c:if test="${!(entry.getCommonName().length() > 0)}"><br/><a
-                                        href="/wqm/r/${entry.getCompactAddress()}">Rename</a></c:if>
-                            </td>
+                    <c:forEach var="entry" items="${stations}">
+                    <tr>
+                        <td>
+                            <a href="/wqm/${view}/${entry.getCompactAddress()}">${entry.getDisplayName()}</a>
+                            <c:if test="${!(entry.getCommonName().length() > 0)}"><br/><a
+                                    href="/wqm/r/${entry.getCompactAddress()}">Rename</a></c:if>
+                        </td>
 
-                            </c:forEach>
-                        </tr>
-                        </thead>
-                    </table>
-                </div>
-            </c:if>
+                        </c:forEach>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </c:if>
 
         <div>
             <c:set var="view" scope="session" value="${view}"/>

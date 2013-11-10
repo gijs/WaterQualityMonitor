@@ -29,10 +29,13 @@ import org.springframework.web.servlet.ModelAndView;
 import wqm.config.AtlasSensor;
 import wqm.config.Messages;
 import wqm.config.Station;
+import wqm.radio.SensorLink.message.CalibrationMessage;
+import wqm.radio.SensorLink.packets.CalibratePacket;
 import wqm.radio.StationManager;
 import wqm.web.exceptions.AlreadyHaveLockOnAnotherSensor;
 import wqm.web.exceptions.AlreadyRunningAnotherCalibrationPhase;
 import wqm.web.exceptions.RedirectException;
+import wqm.web.exceptions._404;
 import wqm.web.server.WQMConfig;
 
 import javax.servlet.http.HttpServletRequest;
@@ -124,6 +127,9 @@ public class WQMCalibrationController extends BaseWQMController {
         ModelAndView view = new ModelAndView(String.format("calibration/%s", sensor.name()));
         view.addObject("station", station);
         view.addObject("sensor", sensor);
+        if (sensor == AtlasSensor.EC) {
+            addECTypes(view);
+        }
         addCommonParams(view, request);
         return view;
     }
@@ -135,19 +141,54 @@ public class WQMCalibrationController extends BaseWQMController {
                                      @PathVariable int phaseID) throws IOException {
         Station station = lockStation(request, stationAddress);
         AtlasSensor sensor = lockSensor(request, stationAddress, sensorID);
+        HttpSession session = request.getSession(true);
+        ModelAndView view = new ModelAndView(String.format("calibration/%s/stage%s", sensor.name(), phaseID));
 
         try {
+            if (sensor == AtlasSensor.EC) {
+                if (phaseID == 0) {
+                    String type = request.getParameter("ec_sensor_type");
+                    logger.error("Sensor type: " + type);
+                    try {
+                        float sensorType = Float.parseFloat(type);
+                        session.setAttribute("ec_sensor_type", sensorType);
+                        CalibratePacket packet = new CalibratePacket(sensor.getId(), CalibratePacket.START_CALIBRATION | CalibratePacket.CALIBRATION_PHASE0);
+                        packet.setValue1(sensorType);
+                        logger.error("Starting EC calibration......");
+                        CalibrationMessage message = new CalibrationMessage(station, packet);
+                        stationManager.startCalibrationPhase(session, message, phaseID);
+                        throw new RedirectException("1");
+
+                    } catch (NullPointerException ne) {
+                        request.getSession().setAttribute(Messages.ERROR_MESSAGE, "You need to select a sensor type.");
+                    } catch (NumberFormatException ne) {
+                        request.getSession().setAttribute(Messages.ERROR_MESSAGE, "You need to select a valid sensor type.");
+                    }
+                    throw new RedirectException(".");
+                }
+                if(session.getAttribute("ec_sensor_type") != null)
+                {
+                    view.addObject("ec_sensor_type", session.getAttribute("ec_sensor_type"));
+                }
+                addECTypes(view);
+            }
             logger.error(stationManager.startCalibrationPhase(request.getSession(true), station, sensor, phaseID));
         } catch (AlreadyRunningAnotherCalibrationPhase pe) {
             logger.error(pe);
         }
 
-        ModelAndView view = new ModelAndView(String.format("calibration/%s/stage%s", sensor.name(), phaseID));
+
         view.addObject("station", station);
         view.addObject("sensor", sensor);
         view.addObject("phase", phaseID);
         addCommonParams(view, request);
         return view;
+    }
+
+    private void addECTypes(ModelAndView view) {
+        view.addObject("k1", CalibratePacket.EC_CALIBRATION_SENSOR_TYPE_K_0_1);
+        view.addObject("k2", CalibratePacket.EC_CALIBRATION_SENSOR_TYPE_K_1_0);
+        view.addObject("k3", CalibratePacket.EC_CALIBRATION_SENSOR_TYPE_K_10_0);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/c/{stationAddress}/{sensorID}/{phaseID}/{command}")
@@ -156,38 +197,66 @@ public class WQMCalibrationController extends BaseWQMController {
                                      @PathVariable int sensorID,
                                      @PathVariable int phaseID,
                                      @PathVariable String command) throws IOException {
+
+        logger.error("Received command " + command);
+
         Station station = lockStation(request, stationAddress);
         AtlasSensor sensor = lockSensor(request, stationAddress, sensorID);
 
-        String name = "";
-        if(command.equalsIgnoreCase("accept"))
-        {
-            stationManager.acceptCalibrationPhase(request.getSession(true), station, sensor, phaseID);
-            if((phaseID + 1) >= sensor.getCalibrationPhases())
-            {
+
+        if (command.equalsIgnoreCase("quit")) {
+            stationManager.quitCalibrationPhase(request.getSession(true), station, sensor);
+            request.getSession(true).setAttribute(Messages.WARNING_MESSAGE, "Calibration has been terminated.");
+            throw new RedirectException("/wqm/c");
+        }
+
+        switch (sensor) {
+            case PH:
+                phCalibrateCommand(request, station, sensor, phaseID, command);
+                break;
+            case ORP:
+                return orpCalibrateCommand(request, station, sensor, phaseID, command);
+            case DO:
+                break;
+            case EC:
+                ecCalibrateCommand(request, station, sensor, phaseID, command);
+                break;
+        }
+
+        throw new _404();
+    }
+
+    private void ecCalibrateCommand(HttpServletRequest request, Station station, AtlasSensor sensor, int phaseID, String command) {
+
+    }
+
+    private void phCalibrateCommand(HttpServletRequest request, Station station, AtlasSensor sensor, int phaseID, String command) {
+        if (command.equalsIgnoreCase("accept")) {
+            stationManager.acceptCalibrationPhase(request.getSession(true), true, station, sensor, phaseID);
+            if ((phaseID + 1) >= sensor.getCalibrationPhases()) {
 
                 //We have finished all the phases of calibration for this sensor.
                 stationManager.quitCalibrationPhase(request.getSession(true), station, sensor);
                 request.getSession(true).setAttribute(Messages.SUCCESS_MESSAGE, "PH Sensor calibrated.");
 
                 throw new RedirectException("/");
-            }else{
-                throw new RedirectException(String.format("/wqm/c/%s/%d/%d", stationAddress, sensorID, phaseID + 1));
+            } else {
+                throw new RedirectException(String.format("/wqm/c/%s/%d/%d", station.getCompactAddress(), sensor.getId(), phaseID + 1));
             }
-        }else if(command.equalsIgnoreCase("quit"))
-        {
-            stationManager.quitCalibrationPhase(request.getSession(true), station, sensor);
-            request.getSession(true).setAttribute(Messages.WARNING_MESSAGE, "Calibration has been terminated.");
-            throw new RedirectException("/wqm/c");
         }
-
-        ModelAndView view = new ModelAndView(name);
-        view.addObject("station", station);
-        view.addObject("sensor", sensor);
-        view.addObject("phase", phaseID);
-        addCommonParams(view, request);
-        return view;
     }
+
+    private ModelAndView orpCalibrateCommand(HttpServletRequest request, Station station, AtlasSensor sensor, int phaseID, String command) {
+        if (command.equalsIgnoreCase("up")) {
+            logger.info("Received + for ORP");
+            stationManager.acceptCalibrationPhase(request.getSession(true), false, station, sensor, phaseID, CalibratePacket.ORP_CALIBRATION_PLUS, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+        } else if (command.equalsIgnoreCase("down")) {
+            logger.info("Received - for ORP");
+            stationManager.acceptCalibrationPhase(request.getSession(true), false, station, sensor, phaseID, CalibratePacket.ORP_CALIBRATION_MINUS, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+        }
+        return new ModelAndView("", "", "OK");
+    }
+
 
     @RequestMapping(method = RequestMethod.GET, value = "/r/{stationAddress}")
     public ModelAndView renameStation(HttpServletRequest request, HttpServletResponse response,
@@ -207,7 +276,6 @@ public class WQMCalibrationController extends BaseWQMController {
         addCommonParams(view, request);
         return view;
     }
-
 
 
 }

@@ -28,6 +28,7 @@ import wqm.config.Port;
 import wqm.config.Station;
 import wqm.radio.SensorLink.PacketHandlerContext;
 import wqm.radio.SensorLink.handlers.PacketHandler;
+import wqm.radio.SensorLink.message.CalibrationMessage;
 import wqm.radio.SensorLink.packets.CalibratePacket;
 import wqm.radio.SensorLink.packets.SensorLinkPacket;
 import wqm.radio.SensorLink.packets.SinkSearch;
@@ -168,6 +169,7 @@ public class BaseStation implements PacketListener {
             }
             try {
                 SensorLinkPacket packet = SensorLinkPacket.constructPacket(res.getData(), time);
+                logger.trace("Constructed packet: "+packet);
                 if (packet != null) {
                     if (packetHandlers.containsKey(packet.getPacketID())) {
                         List<PacketHandler> handlers = packetHandlers.get(packet.getPacketID());
@@ -198,8 +200,10 @@ public class BaseStation implements PacketListener {
         xbee.close();
     }
 
-    public boolean sendCalibrationPacket(String stationAddress, CalibratePacket packet) {
-        logger.trace("Calibrateion Packet: " + Util.toHexString(packet.getData()));
+    public boolean sendCalibrationPacket(CalibrationMessage message) {
+        CalibratePacket packet = message.getPacket();
+        String stationAddress = message.getTo().getCompactAddress();
+        logger.trace("Calibration Packet: " + Util.toHexString(packet.getData()));
         if (hasStation(stationAddress)) {
             XBeeAddress64 address = seenStations.get(stationAddress);
             logger.info(address);
