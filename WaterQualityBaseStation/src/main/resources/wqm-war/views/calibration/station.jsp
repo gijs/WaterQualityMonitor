@@ -19,6 +19,7 @@
 
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <mytags:layout title="Calibration" view="c">
 
 <jsp:attribute name="head">
