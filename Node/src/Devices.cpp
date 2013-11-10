@@ -31,6 +31,9 @@ list_node<XBeeResponse>* Devices::packet_queue_head = NULL;
 int32_t Devices::SH;
 int32_t Devices::SL;
 
+bool          doCalibrating;
+unsigned long doStartTime;
+
 
 uint32_t Devices::initilize_devices(
 		int sd_cs_pin,
@@ -45,6 +48,7 @@ uint32_t Devices::initilize_devices(
 		char* record_store_filename,
 		int32_t max_record_size) {
 
+	doCalibrating = false;
 	uint32_t toRet = 0;
 	pinMode(sd_cs_pin, OUTPUT);
 	if(!setupXbee(xbee_stream, xbee_associate_pin))
@@ -190,27 +194,69 @@ bool Devices::findSink()
 
 }
 
-bool start_sensor_calibration(CalibratePacket* calibrate_packet, CalibratePacket* outGoing)
+bool populate_sensor_calibration(CalibratePacket* calibrate_packet, CalibratePacket* outGoing)
 {
-
+	DEBUG("Populating: ");
 	switch (calibrate_packet->sensor) {
 	case PH:
 	{
+		DEBUG("PH: ");
 		outGoing->sensor = calibrate_packet->sensor;
 		double ph = Devices::atlas->continuousPH(NAN);
+		DEBUG_LN(ph);
 		if (!isnan(ph)) {
-			outGoing->setVal1(ph, 2);
+			outGoing->value1 = ph;
 			return true;
 		}
 	}
 		break;
 	case DO:
+		if(!doCalibrating)
+		{
+			doStartTime = millis();
+			doCalibrating = true;
+		}
+		DEBUG("DO: ");
+		outGoing->sensor = calibrate_packet->sensor;
+		double percentage, _do;
+		Devices::atlas->continuousDO(NAN, 0, percentage, _do);
+		DEBUG(_do);
+		DEBUG(" %: ");
+		DEBUG_LN(percentage);
+		if (!isnan(_do)) {
+			outGoing->value1 = percentage;
+			outGoing->value2 = _do;
+			outGoing->value3 = (millis() - doStartTime);
+			return true;
+		}
 		break;
 	case ORP:
+	{
+		DEBUG("ORP: ");
+		outGoing->sensor = calibrate_packet->sensor;
+		double orp = Devices::atlas->continuousORP();
+		DEBUG_LN(orp);
+		if (!isnan(orp)) {
+			outGoing->value1 = orp;
+			return true;
+		}
+	}
 		break;
 	case EC:
+		DEBUG("EC, uS: ");
+		int32_t us, ppm, salinity;
+		double _ok = Devices::atlas->continuousEC(NAN, us, ppm, salinity);
+		DEBUG(us);DEBUG(", ppm: ");DEBUG(ppm);DEBUG(", salinity: ");DEBUG_LN(salinity);
+		if(!isnan(_ok))
+		{
+			outGoing->value1 = us;
+			outGoing->value2 = ppm;
+			outGoing->value3 = salinity;
+			return true;
+		}
 		break;
 	}
+	return false;
 }
 
 void accept_sensor_calibration(CalibratePacket* calibrate_packet)
@@ -221,12 +267,11 @@ void accept_sensor_calibration(CalibratePacket* calibrate_packet)
 	_DEBUG("Flags: ");
 	DEBUG_LN(calibrate_packet->flags);
 	switch (calibrate_packet->sensor) {
-	case PH:
-	{
+	case PH: {
 		bool accept = false;
 		PHCalibration val;
-		switch(calibrate_packet->flags & SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION)
-		{
+		switch (calibrate_packet->flags
+				& SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION) {
 		case SENSORLINK_CALIBRATION_FLAG_ACCEPT_0:
 			val = Seven;
 			accept = true;
@@ -241,18 +286,62 @@ void accept_sensor_calibration(CalibratePacket* calibrate_packet)
 			break;
 
 		}
-		if(accept)
-		{
-			Devices::atlas->acceptPH(val);
+		if (accept) {
+			Devices::atlas->calibratePH(val);
 		}
 	}
 		break;
 	case DO:
+		doCalibrating = false;
+		Devices::atlas->calibrateDO();
 		break;
-	case ORP:
+	case ORP: {
+
+		if (calibrate_packet->value1 == SENSORLINK_CALIBRATION_ORP_PLUS) {
+			DEBUG_LN("ORP PLUS");
+			Devices::atlas->calibrateORP(Plus);
+		} else if (calibrate_packet->value1 == SENSORLINK_CALIBRATION_ORP_MINUS) {
+			DEBUG_LN("ORP MINUS");
+			Devices::atlas->calibrateORP(Minus);
+		} else {
+			DEBUG("Unknown calibration value: ");
+			DEBUG_LN(calibrate_packet->value1);
+		}
 		break;
-	case EC:
+	}
+	case EC: {
+		DEBUG_LN("ACCEPT EC");
+		switch (calibrate_packet->flags	& SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION) {
+
+			case SENSORLINK_CALIBRATION_FLAG_ACCEPT_0: {
+				bool ok = true;
+				switch (int(calibrate_packet->value1)) {
+					case SENSORLINK_CALIBRATION_EC_K_0_1:
+
+						Devices::atlas->setECType(K0_1);
+						break;
+					case SENSORLINK_CALIBRATION_EC_K_1_0:
+						Devices::atlas->setECType(K1_0);
+						break;
+					case SENSORLINK_CALIBRATION_EC_K_10_0:
+						Devices::atlas->setECType(K10_0);
+						break;
+					default:
+						ok = false;
+						break;
+				}
+				if(ok)
+				{
+
+//					int32_t us, ppm, salinity;
+//					Devices::atlas->continuousEC(NAN, us, ppm, salinity);
+				}
+				delay(5000);
+			}
+			break;
+		}
 		break;
+	}
 	}
 
 }
@@ -274,18 +363,29 @@ void Devices::calibrate(ZBRxResponse* calibrate_request, unsigned long timeout)
 	_DEBUG("Flags: ");
 	_DEBUG_LN(calibrate_packet->flags);
 	_DEBUG_LN(millis());
+
 	if((calibrate_packet->flags & SENSORLINK_CALIBRATION_FLAG_START_CALIBRATION) > 0)
 	{
 		_DEBUG("Calibrating sensor:");
 		DEBUG_LN(calibrate_packet->sensor);
-		while (millis() - start < timeout) {
 
-			if (start_sensor_calibration(calibrate_packet, &outGoing)) {
+		//The EC sensor includes an accept parameter in the start calibration packet
+		if((calibrate_packet->flags & SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION) > 0)
+		{
+			DEBUG_LN("Received start/accept calibration.");
+			accept_sensor_calibration(calibrate_packet);
+			start = millis();
+			DEBUG_LN();
+		}
+		while (millis() - start < timeout) {
+			outGoing.init();
+			if (populate_sensor_calibration(calibrate_packet, &outGoing)) {
 				Devices::xbee->send(request);
 				XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_TX_STATUS_RESPONSE, NULL, Devices::queue_packet);
 			}else
 			{
 				DEBUG_LN("Something went wrong.");
+				delay(10000);
 				//Error
 //				XBeeUtil::wait_for_packet_type(Devices::xbee, 50, ZB_TX_STATUS_RESPONSE, NULL, Devices::queue_packet);
 			}

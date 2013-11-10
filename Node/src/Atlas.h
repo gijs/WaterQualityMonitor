@@ -29,6 +29,10 @@ static char END_COMMAND = 'E';
 static char IDENTIFY_COMMAND = 'I';
 static char SINGLE_SAMPLE_COMMAND = 'R';
 static char CONTINUOUS_COMMAND = 'C';
+static char ORP_CALIBRATE_PLUS_COMMAND = '+';
+static char ORP_CALIBRATE_MINUS_COMMAND = '-';
+static char DO_CALIBRATE_COMMAND = 'M';
+static char EC_SENSOR_TYPE_COMMAND = 'P';
 
 enum Sensor {
 	PH, DO, ORP, EC
@@ -37,6 +41,15 @@ enum Sensor {
 enum PHCalibration
 {
 	Four, Seven, Ten
+};
+
+enum ECCSensorType {
+	K0_1 = 1, K1_0 = 2, K10_0 = 3
+};
+
+enum ORPCalibration
+{
+	Plus, Minus
 };
 
 
@@ -70,7 +83,7 @@ private:
 	bool select(Sensor sensor);
 	bool select(int port);
 	void probe_ports();
-	void parse_version(String &version, int port);
+	bool parse_version(String &version, int port);
 	void enable();
 	void disable();
 
@@ -79,6 +92,10 @@ private:
 	double toDouble(String &value);
 	int split_string_count(char* toSplit, int length, char split_on[], int split_on_length);
 	int split_string(char* toSplit, char* result[], int result_length);
+
+	bool startContinuous(Sensor sensor);
+	void parseDO(String value, double &percentSaturation, double &_DO);
+	bool parseEC(String value, int32_t &us, int32_t &ppm, int32_t &salinity);
 
 public:
 	Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pin, bool enableDOSaturation);
@@ -92,8 +109,15 @@ public:
 
 
 	double continuousPH(double temperature);
-	void   acceptPH(PHCalibration val);
-	void endContinuous();
+	double continuousORP();
+	double continuousDO(double temperature, int32_t us, double &percentSaturation, double &DO);
+	double continuousEC(double temperature, int32_t &us, int32_t &ppm, int32_t &salinity);
+	void   endContinuous();
+
+	void calibratePH(PHCalibration val);
+	void calibrateORP(ORPCalibration val);
+	void calibrateDO();
+	void setECType(ECCSensorType type);
 };
 
 
