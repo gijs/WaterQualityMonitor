@@ -44,10 +44,15 @@
 #define SENSORLINK_CALIBRATION_FLAG_ACCEPT_2 32
 #define SENSORLINK_CALIBRATION_FLAG_ACCEPT_3 64
 #define SENSORLINK_CALIBRATION_FLAG_ACCEPT_4 128
-#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_5 128
+#define SENSORLINK_CALIBRATION_FLAG_ACCEPT_5 256
 #define SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION ( SENSORLINK_CALIBRATION_FLAG_ACCEPT_0 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_1 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_2 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_3 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_4 | SENSORLINK_CALIBRATION_FLAG_ACCEPT_5)
 
+#define SENSORLINK_CALIBRATION_ORP_PLUS 2.0
+#define SENSORLINK_CALIBRATION_ORP_MINUS 4.0
 
+#define SENSORLINK_CALIBRATION_EC_K_0_1 2
+#define SENSORLINK_CALIBRATION_EC_K_1_0 3
+#define SENSORLINK_CALIBRATION_EC_K_10_0 4
 
 struct SensorLinkPacket
 {
@@ -78,16 +83,12 @@ struct CalibratePacket: SensorLinkPacket
 {
 	int32_t sensor;
 	int32_t flags;
-	int64_t value1;
-	int16_t exponent1;
-	int64_t value2;
-	int16_t exponent2;
-	int64_t value3;
-	int16_t exponent3;
+
+	float value1;
+	float value2;
+	float value3;
+
 	void init();
-	void setVal1(float value, int16_t exponent);
-	void setVal2(float value, int16_t exponent);
-	void setVal3(float value, int16_t exponent);
 };
 
 struct StatusPacket: SensorLinkPacket
