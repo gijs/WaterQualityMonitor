@@ -33,6 +33,7 @@ static char ORP_CALIBRATE_PLUS_COMMAND = '+';
 static char ORP_CALIBRATE_MINUS_COMMAND = '-';
 static char DO_CALIBRATE_COMMAND = 'M';
 static char EC_SENSOR_TYPE_COMMAND = 'P';
+static char EC_CALIBRATION_COMMAND = 'P';
 
 enum Sensor {
 	PH, DO, ORP, EC
@@ -43,8 +44,12 @@ enum PHCalibration
 	Four, Seven, Ten
 };
 
-enum ECCSensorType {
-	K0_1 = 1, K1_0 = 2, K10_0 = 3
+enum ECSensorType {
+	SInvalid = 0, K0_1 = 1, K1_0 = 2, K10_0 = 3
+};
+
+enum ECCalibration {
+	CInvalid = 0, Dry = 1, High = 2, Low = 3
 };
 
 enum ORPCalibration
@@ -76,6 +81,7 @@ private:
 	SensorDescriptor sensorMap[ATLAS_MAX_SENSORS];
 	int8_t sensorCount;
 	boolean enableDOPS;
+	ECSensorType ecType;
 
 	int32_t CMODE;
 
@@ -117,7 +123,8 @@ public:
 	void calibratePH(PHCalibration val);
 	void calibrateORP(ORPCalibration val);
 	void calibrateDO();
-	void setECType(ECCSensorType type);
+	bool calibrateEC(ECCalibration val);
+	void setECType(ECSensorType type);
 };
 
 

@@ -224,8 +224,8 @@ bool populate_sensor_calibration(CalibratePacket* calibrate_packet, CalibratePac
 		DEBUG(" %: ");
 		DEBUG_LN(percentage);
 		if (!isnan(_do)) {
-			outGoing->value1 = percentage;
-			outGoing->value2 = _do;
+			outGoing->value1 = _do;
+			outGoing->value2 = percentage;
 			outGoing->value3 = (millis() - doStartTime);
 			return true;
 		}
@@ -314,10 +314,11 @@ void accept_sensor_calibration(CalibratePacket* calibrate_packet)
 		switch (calibrate_packet->flags	& SENSORLINK_CALIBRATION_FLAG_ACCEPT_CALIBRATION) {
 
 			case SENSORLINK_CALIBRATION_FLAG_ACCEPT_0: {
-				bool ok = true;
+
+				DEBUG("EC Sensor Type: ");
+				DEBUG_LN(calibrate_packet->value1);
 				switch (int(calibrate_packet->value1)) {
 					case SENSORLINK_CALIBRATION_EC_K_0_1:
-
 						Devices::atlas->setECType(K0_1);
 						break;
 					case SENSORLINK_CALIBRATION_EC_K_1_0:
@@ -327,18 +328,22 @@ void accept_sensor_calibration(CalibratePacket* calibrate_packet)
 						Devices::atlas->setECType(K10_0);
 						break;
 					default:
-						ok = false;
+						DEBUG_LN("Invalid EC Sensor type selected: ");
 						break;
 				}
-				if(ok)
-				{
-
-//					int32_t us, ppm, salinity;
-//					Devices::atlas->continuousEC(NAN, us, ppm, salinity);
-				}
-				delay(5000);
 			}
 			break;
+			case SENSORLINK_CALIBRATION_FLAG_ACCEPT_1: //Dry Phase
+				DEBUG_LN("Accept Dry Phase");
+				break;
+			case SENSORLINK_CALIBRATION_FLAG_ACCEPT_2: //High Phase
+				DEBUG_LN("Accept High Phase");
+				break;
+			case SENSORLINK_CALIBRATION_FLAG_ACCEPT_3: //Low Phase
+				DEBUG_LN("Accept Low Phase");
+				break;
+
+
 		}
 		break;
 	}
@@ -385,6 +390,7 @@ void Devices::calibrate(ZBRxResponse* calibrate_request, unsigned long timeout)
 			}else
 			{
 				DEBUG_LN("Something went wrong.");
+//				Devices::atlas->align();
 				delay(10000);
 				//Error
 //				XBeeUtil::wait_for_packet_type(Devices::xbee, 50, ZB_TX_STATUS_RESPONSE, NULL, Devices::queue_packet);
@@ -464,22 +470,19 @@ void _queue_packet(XBeeResponse* packet)
 	}else
 	{
 		list_node<XBeeResponse>* tmp = new list_node<XBeeResponse>();
+		list_node<XBeeResponse>* current = NULL;
 		tmp->node = packet;
-		tmp->next = Devices::packet_queue_head;
-		Devices::packet_queue_head = tmp;
+		tmp->next = NULL;
+		current = Devices::packet_queue_head;
+
+		//Iterate to the end of the queue
+		while(current->next != NULL)
+		{
+			current = current->next;
+		}
+		current->next = tmp;
 
 	}
-//	if(Devices::packet_queue_head == NULL &&  Devices::packet_queue_tail == NULL)
-//	{
-//		Devices::packet_queue_head = new list_node<XBeeResponse>();
-//		Devices::packet_queue_tail = Devices::packet_queue_head;
-//		Devices::packet_queue_head->node = packet;
-//	}else
-//	{
-//		Devices::packet_queue_tail->next = new list_node<XBeeResponse>();
-//		Devices::packet_queue_tail = Devices::packet_queue_tail->next;
-//		Devices::packet_queue_tail->node = packet;
-//	}
 }
 
 #define _QUEUE_PACKET(packet_type) {packet_type* packet = new packet_type();\

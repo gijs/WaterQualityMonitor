@@ -24,6 +24,7 @@ Atlas::Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pi
 {
 	sensorCount = 0;
 	enableDOPS = enableDOPSaturation;
+	ecType = SInvalid;
 	this->sensor_stream = sensor_stream;
 	this->e_pin = e_pin;
 	this->so_pin = so_pin;
@@ -405,7 +406,6 @@ double Atlas::continuousEC(double temperature, int32_t &us, int32_t &ppm, int32_
 
 	if(startContinuous(EC) && CMODE == EC)
 	{
-		DEBUG_LN(4);
 		sensor_stream->setTimeout(2000);
 		String value = sensor_stream->readStringUntil(carrage_return);
 		sensor_stream->setTimeout(1000);
@@ -479,8 +479,68 @@ void Atlas::calibrateDO()
 	}
 }
 
-void Atlas::setECType(ECCSensorType type) {
+bool Atlas::calibrateEC(ECCalibration val) {
+	if (CMODE == EC) {
+		int cval = -1;
+		if (val == Dry) {
+			cval = 0;
+		} else {
+			switch (ecType) {
+			case K0_1:
+				switch (val) {
+				case High:
+					cval = 30;
+					break;
+				case Low:
+					cval = 2;
+					break;
+				}
+				break;
+			case K1_0:
+				switch (val) {
+				case High:
+					cval = 40;
+					break;
+				case Low:
+					cval = 10;
+					break;
+				}
+				break;
+			case K10_0:
+				switch (val) {
+				case High:
+					cval = 90;
+					break;
+				case Low:
+					cval = 62;
+					break;
+				}
+				break;
+			default:
+				DEBUG_LN("Invalid EC Probe Type");
+				return false;
+			}
+			if(cval >= 0)
+			{
+				String blah = sensor_stream->readStringUntil(carrage_return);
+				sensor_stream->print(carrage_return);
+				clean_sensor_port();
+				sensor_stream->print(EC_CALIBRATION_COMMAND);
+				sensor_stream->print(cval);
+				sensor_stream->print(carrage_return);
+				String result = sensor_stream->readStringUntil(carrage_return);
+			}else
+			{
+				DEBUG_LN("Could not find calibration value.");
+				return false;
+			}
+		}
+	}
+}
 
+void Atlas::setECType(ECSensorType type) {
+
+	ecType = type;
 	DEBUG("Setting EC: ");
 	DEBUG_LN(type);
 	if (CMODE == EC) {
@@ -491,6 +551,7 @@ void Atlas::setECType(ECCSensorType type) {
 			return;
 		}
 	}
+	clean_sensor_port();
 	sensor_stream->print(carrage_return);
 	sensor_stream->print(EC_SENSOR_TYPE_COMMAND);
 	sensor_stream->print(comma);
