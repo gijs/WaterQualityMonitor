@@ -19,10 +19,9 @@
 
 package wqm.data.highstock;
 
-import wqm.config.AtlasSensor;
+import wqm.constants.AtlasSensor;
 import wqm.radio.RecordStorage.record.FloatRecord;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 

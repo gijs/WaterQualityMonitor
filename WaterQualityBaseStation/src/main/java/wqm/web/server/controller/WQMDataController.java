@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import wqm.PluginManager;
-import wqm.config.AtlasSensor;
+import wqm.constants.AtlasSensor;
 import wqm.data.highstock.HighStockRecordConverter;
 import wqm.radio.RecordStorage.record.BaseRecord;
 import wqm.radio.RecordStorage.record.FloatRecord;
@@ -128,6 +128,8 @@ public class WQMDataController extends BaseWQMController {
         switch (sensor) {
             case PH:
             case ORP:
+            case EC:
+            case DO:
                 ArrayList<CalibratePacket> packets = stationManager.getCalibrationSessionManager().getCalibrationSessionData(session);
                 if (packets == null) {
                     throw new _404();
@@ -138,8 +140,7 @@ public class WQMDataController extends BaseWQMController {
                     data.add(new Object[]{packet.getTime(), packet.getValue1()});
                 }
                 return data;
-            case DO:
-                break;
+//                break;
         }
         return null;
     }

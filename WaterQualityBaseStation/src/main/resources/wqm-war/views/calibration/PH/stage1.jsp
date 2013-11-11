@@ -20,7 +20,7 @@
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<mytags:layout title="Calibrate ${station.getCommonName()} PH" view="calibrate" caching="false">
+<mytags:layout title="Calibrate ${station.getCommonName()} ${sensor.getLongName()}" view="c" caching="false" logo="/images/ph-logo.jpg">
 
 <jsp:attribute name="head">
     <script src="/js/calibrate_ph.js"></script>
@@ -29,13 +29,28 @@
 
     <jsp:body>
         <div id="calibrate_content" class="span5">
-            <H1>${station.getCommonName()} PH Calibration - <span class="ph4">PH 4</span></H1>
-            Rinse off pH sensor, dry with paper towel.
-            Place you pH Sensor in the red <span class="ph4">pH 4</span> calibration solution.
-            Wait one to two minutes and when the graph has stabilized press the accept button below, or you can press quit to exit calibration mode.
+        <H1>${station.getCommonName()} PH Calibration - <span class="ph4">PH 4</span></H1>
+        Rinse off pH sensor, dry with paper towel.
+        Place you pH Sensor in the red <span class="ph4">pH 4</span> calibration solution.
+        Wait one to two minutes and when the graph has stabilized press the accept button below, or you can press quit to exit calibration mode.
+        <div id="calibration_button_1">
+            <table>
+                <tr>
+                    <td>
+                        <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/quit">
+                            <button class="btn btn-default" type="submit">Quit</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/accept">
+                            <button class="btn btn-default" type="submit">Accept</button>
+                        </form>
+                    </td>
+                </tr>
+            </table>
             <div id="ph_graph"></div>
-            <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/accept"><button class="btn btn-default" type="submit">Accept</button></form>
-            <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/quit"><button class="btn btn-default" type="submit">Quit</button></form>
+                <%--<form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/accept"><button class="btn btn-default" type="submit">Accept</button></form>--%>
+                <%--<form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/quit"><button class="btn btn-default" type="submit">Quit</button></form>--%>
             <script>
                 initPH("PH Calibration", "ph_graph", "/wqm/d/${station.getCompactAddress()}/${sensor.getId()}/${phase}")
             </script>

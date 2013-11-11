@@ -19,8 +19,10 @@
 
 package wqm.web.server.controller;
 
+import org.apache.log4j.Logger;
 import org.springframework.web.servlet.ModelAndView;
-import wqm.config.AtlasSensor;
+import wqm.constants.AtlasSensor;
+import wqm.constants.Locks;
 import wqm.config.Messages;
 import wqm.config.Station;
 import wqm.radio.StationManager;
@@ -39,7 +41,7 @@ import java.io.IOException;
  * @author NigelB
  */
 public class BaseWQMController {
-
+    private static Logger logger = Logger.getLogger(BaseWQMController.class);
     protected StationManager stationManager;
     protected WQMConfig config;
 
@@ -61,9 +63,8 @@ public class BaseWQMController {
         }
     }
 
-    protected  Station lockStation(HttpServletRequest request, String stationAddress) throws IOException {
-        Station _station = validateStation(request, stationAddress);
-        HttpSession session = request.getSession(true);
+    protected  Station lockStation(HttpSession session, String stationAddress) throws IOException {
+        Station _station = validateStation(session, stationAddress);
         if (!stationManager.lockStation(session, stationAddress)) {
             session.setAttribute(Messages.ERROR_MESSAGE, String.format("%s is currently being calibrated by somebody else.", _station.getDisplayName()));
             throw new RedirectException(".");
@@ -71,9 +72,9 @@ public class BaseWQMController {
         return _station;
     }
 
-    protected  AtlasSensor lockSensor(HttpServletRequest request, String stationAddress, int sensorID) throws IOException {
-        AtlasSensor sensor = validateSensor(request, sensorID);
-        HttpSession session = request.getSession(true);
+    protected  AtlasSensor lockSensor(HttpSession session, String stationAddress, int sensorID) throws IOException {
+        AtlasSensor sensor = validateSensor(session, sensorID);
+
         try {
             stationManager.lockSensor(session, stationAddress, sensorID);
         } catch (AlreadyHaveLockOnAnotherSensor alreadyHaveLockOnAnotherSensor) {
@@ -86,21 +87,41 @@ public class BaseWQMController {
     }
 
 
-    protected  Station validateStation(HttpServletRequest request, String stationAddress) throws IOException {
+    protected  Station validateStation(HttpSession session, String stationAddress)  {
         Station station = config.getStation(stationAddress);
         if (station == null) {
-            request.getSession().setAttribute(Messages.ERROR_MESSAGE, "Invalid station.");
+            session.setAttribute(Messages.ERROR_MESSAGE, "Invalid station.");
             throw new RedirectException(".");
         }
         return station;
     }
 
-    protected  AtlasSensor validateSensor(HttpServletRequest request, int sensor) throws IOException {
+    protected  AtlasSensor validateSensor(HttpSession session, int sensor)  {
+        Object sensorLock = session.getAttribute(Locks.Station.getLockName());
+        if(sensorLock == null)
+        {
+            logger.error("Trying to get to a sensor without acquiring the appropriate locks.");
+            session.setAttribute(Messages.ERROR_MESSAGE, "Deep Linking not allowed to sensor.");
+            throw new RedirectException("..");
+
+        }
         AtlasSensor _sensor = AtlasSensor.find(sensor);
         if (_sensor == null) {
-            request.getSession().setAttribute(Messages.ERROR_MESSAGE, "Invalid sensor.");
+            session.setAttribute(Messages.ERROR_MESSAGE, "Invalid sensor.");
             throw new RedirectException(".");
         }
         return _sensor;
+    }
+
+    protected void validatePhase(HttpSession session, String stationAddress, int sensorID, int phaseID) {
+        Object sensorLock = session.getAttribute(Locks.Sensor.getLockName());
+        if(sensorLock == null)
+        {
+
+            logger.error("Trying to get to a phase without acquiring the appropriate locks.");
+            session.setAttribute(Messages.ERROR_MESSAGE, "Deep Linking not allowed to phase.");
+            throw new RedirectException("../..");
+        }
+        validateSensor(session, sensorID);
     }
 }

@@ -20,7 +20,7 @@
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<mytags:layout title="Calibrate ${station.getCommonName()} ORP" view="calibrate" caching="false">
+<mytags:layout title="Calibrate ${station.getCommonName()} ORP" view="calibrate" caching="false" logo="/images/orp-logo.jpg">
 
 <jsp:attribute name="head">
     <script src="/js/calibrate_orp.js"></script>

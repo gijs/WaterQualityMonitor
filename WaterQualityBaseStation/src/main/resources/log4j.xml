@@ -74,6 +74,11 @@
         <appender-ref ref="STDOUT"/>
     </category>
 
+    <category name="wqm.radio.BaseStation" additivity="false">
+        <priority value="trace" />
+        <appender-ref ref="STDOUT"/>
+    </category>
+
     <root>
         <priority value="error"/>
         <appender-ref ref="STDOUT"/>

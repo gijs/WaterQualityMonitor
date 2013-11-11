@@ -19,9 +19,8 @@
 
 package wqm.data.csv;
 
-import wqm.config.AtlasSensor;
+import wqm.constants.AtlasSensor;
 import wqm.radio.RecordStorage.record.DORecord;
-import wqm.radio.RecordStorage.record.FloatRecord;
 
 import java.io.File;
 import java.io.FileOutputStream;

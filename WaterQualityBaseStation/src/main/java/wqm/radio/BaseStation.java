@@ -203,6 +203,7 @@ public class BaseStation implements PacketListener {
     public boolean sendCalibrationPacket(CalibrationMessage message) {
         CalibratePacket packet = message.getPacket();
         String stationAddress = message.getTo().getCompactAddress();
+        logger.trace("Calibration Packet: " + packet.toString());
         logger.trace("Calibration Packet: " + Util.toHexString(packet.getData()));
         if (hasStation(stationAddress)) {
             XBeeAddress64 address = seenStations.get(stationAddress);

@@ -21,8 +21,7 @@ package wqm.radio;
 
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 import org.apache.log4j.Logger;
-import wqm.Pair;
-import wqm.config.AtlasSensor;
+import wqm.constants.AtlasSensor;
 import wqm.config.Station;
 import wqm.radio.SensorLink.PacketHandlerContext;
 import wqm.radio.SensorLink.handlers.PacketHandler;
@@ -34,6 +33,8 @@ import wqm.web.exceptions.AlreadyRunningAnotherCalibrationPhase;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.Hashtable;
+
+import static wqm.constants.Locks.Phase;
 
 /**
  * Date: 11/5/13
@@ -90,6 +91,7 @@ public class CalibrationSessionManager implements PacketHandler<CalibratePacket>
     }
 
     public void stopCalibrationSession(String compactAddress) {
+        logger.error("Ending Calibration session");
         HttpSession session = calibrationSessions.remove(compactAddress);
         if (session != null) {
             session.removeAttribute("calibration_data");
@@ -99,9 +101,9 @@ public class CalibrationSessionManager implements PacketHandler<CalibratePacket>
 
 
     public boolean startCalibrationPhase(HttpSession session, BaseStation baseStation, CalibrationMessage message, int phaseID) throws AlreadyRunningAnotherCalibrationPhase {
-        Integer _phaseID = (Integer) session.getAttribute("lock_phase");
+        Integer _phaseID = (Integer) session.getAttribute(Phase.getLockName());
         if (_phaseID == null) {
-            session.setAttribute("lock_phase", _phaseID);
+            session.setAttribute(Phase.getLockName(), _phaseID);
         } else if (_phaseID != phaseID) {
             throw new AlreadyRunningAnotherCalibrationPhase(phaseID);
         }

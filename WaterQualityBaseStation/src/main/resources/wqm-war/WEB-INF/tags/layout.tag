@@ -6,6 +6,7 @@
 <%@attribute name="view" required="true" type="java.lang.String" %>
 <%@attribute name="noMenu" required="false" type="java.lang.Boolean" %>
 <%@attribute name="caching" required="false" type="java.lang.Boolean" %>
+<%@attribute name="logo" required="false" type="java.lang.String" %>
 <!DOCTYPE html>
 <%--
   ~ Water Quality Monitor Java Basestation
@@ -29,11 +30,11 @@
 
 <c:if test="${ not empty caching}">
     <c:if test="${caching}">
-    <%
-        response.setHeader("Pragma", "No-cache");
-        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-        response.setDateHeader("Expires", -1);
-    %>
+        <%
+            response.setHeader("Pragma", "No-cache");
+            response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            response.setDateHeader("Expires", -1);
+        %>
     </c:if>
 </c:if>
 
@@ -48,21 +49,32 @@
     <jsp:invoke fragment="head"/>
 </head>
 <body>
+<c:if test="${view.equals('c')}">
+    <c:set var="calibrate_class" value="nav_selected"/>
+</c:if>
+<c:if test="${view.equals('m')}">
+    <c:set var="monitor_class" value="nav_selected"/>
+</c:if>
 <div class="navbar">
     <div class="navbar-inner">
         <a class="brand" href="/">Water Quality Monitor</a>
         <ul class="nav">
+            <li class="${monitor_class}"><a href="/wqm/m">Monitor</a></li>
+            <li class="${calibrate_class}"><a href="/wqm/c">Calibrate</a></li>
             <li><a href="/WQMData">Data</a></li>
-            <li><a href="/wqm/c">Calibrate</a></li>
         </ul>
     </div>
 </div>
 
 <div class="container-fluid">
     <div class="row-fluid">
-
         <c:if test="${empty noMenu}">
             <div id="side-bar" class="span2">
+
+                <c:if test="${not empty logo}">
+                    <img id="logo" src="${logo}"/>
+                </c:if>
+
                 <table id="server_commands" class='table'>
                     <thead>
                     <tr>

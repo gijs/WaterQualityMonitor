@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import wqm.Pair;
-import wqm.config.AtlasSensor;
+import wqm.constants.AtlasSensor;
 import wqm.config.Port;
 import wqm.config.Station;
 import wqm.radio.SensorLink.handlers.PacketHandler;
@@ -41,6 +41,10 @@ import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 import java.util.ArrayList;
 import java.util.List;
+
+import static wqm.constants.Locks.Phase;
+import static wqm.constants.Locks.Sensor;
+import static wqm.constants.Locks.Station;
 
 /**
  * Date: 11/2/13
@@ -136,24 +140,24 @@ public class StationManager implements DisposableBean, HttpSessionListener /*, P
     }
 
     public Station getStation(HttpSession session) {
-        return (Station) session.getAttribute("lock_station");
+        return (Station) session.getAttribute(Station.getLockName());
     }
 
     public AtlasSensor getSensor(HttpSession session) {
-        return AtlasSensor.find((Integer) session.getAttribute("lock_sensor"));
+        return AtlasSensor.find((Integer) session.getAttribute(Sensor.getLockName()));
     }
 
     public Integer getPhase(HttpSession session) {
-        return (Integer) session.getAttribute("lock_phase");
+        return (Integer) session.getAttribute(Phase.getLockName());
     }
 
     public synchronized boolean lockStation(HttpSession session, String stationAddress) {
-        Station station = (Station) session.getAttribute("lock_station");
+        Station station = (Station) session.getAttribute(Station.getLockName());
 
         if (station == null) {
             station = config.getStation(stationAddress);
             if (!station.isLocked()) {
-                session.setAttribute("lock_station", station);
+                session.setAttribute(Station.getLockName(), station);
                 station.setLocked(true);
                 return true;
             }
@@ -165,9 +169,9 @@ public class StationManager implements DisposableBean, HttpSessionListener /*, P
 
     public synchronized boolean lockSensor(HttpSession session, String stationAddress, int sensorID) throws AlreadyHaveLockOnAnotherSensor {
         if (lockStation(session, stationAddress)) {
-            Integer _sensorID = (Integer) session.getAttribute("lock_sensor");
+            Integer _sensorID = (Integer) session.getAttribute(Sensor.getLockName());
             if (_sensorID == null) {
-                session.setAttribute("lock_sensor", sensorID);
+                session.setAttribute(Sensor.getLockName(), sensorID);
                 return true;
             }
             if (_sensorID == sensorID) {
@@ -206,7 +210,7 @@ public class StationManager implements DisposableBean, HttpSessionListener /*, P
             if (baseStation.getB().hasStation(station.getCompactAddress())) {
                 boolean toRet = calibrationSessionManager.acceptCalibrationPhase(endsPhase, baseStation.getB(), station, sensor, phaseID, v1, v2, v3);
                 if (endsPhase) {
-                    session.removeAttribute("lock_phase");
+                    session.removeAttribute(Phase.getLockName());
                 }
                 return toRet;
             }
@@ -227,9 +231,9 @@ public class StationManager implements DisposableBean, HttpSessionListener /*, P
     }
 
     private void unlock(HttpSession session, Station station) {
-        session.removeAttribute("lock_station");
-        session.removeAttribute("lock_sensor");
-        session.removeAttribute("lock_phase");
+        session.removeAttribute(Station.getLockName());
+        session.removeAttribute(Sensor.getLockName());
+        session.removeAttribute(Phase.getLockName());
         station.setLocked(false);
     }
 

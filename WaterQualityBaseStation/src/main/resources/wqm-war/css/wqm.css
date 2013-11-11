@@ -22,6 +22,21 @@
     margin-left:20px;
 }
 
+.nav_selected
+{
+    border: 1px solid #400000;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background-color: rgba(64,0,0,0.1);;
+
+}
+
+#do_timer{
+    text-align: center;
+    margin: 10px;
+    font-size: larger;
+}
+
 #calibrate_content
 {
 
@@ -31,7 +46,10 @@
 {
     margin-left:180px;
 }
-
+#calibration_button_1
+{
+    padding-top: 10px;
+}
 #calibration_button_1 table {
     margin-left:auto;
     margin-right:auto;

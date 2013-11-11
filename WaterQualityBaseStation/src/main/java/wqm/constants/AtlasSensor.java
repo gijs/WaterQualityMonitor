@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.config;
+package wqm.constants;
 
 /**
  * Date: 11/3/13
@@ -30,7 +30,7 @@ public enum AtlasSensor {
     PH("PH", 3),
     DO("Dissolved Oxygen", 1),
     ORP("Oxidation Reduction Potential", 1),
-    EC("Electrical Conductivity", 1);
+    EC("Electrical Conductivity", 4);
 
     private int id;
     private String longName;

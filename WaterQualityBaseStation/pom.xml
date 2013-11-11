@@ -154,6 +154,7 @@
 
                                 <mkdir dir="${web.root}/css"/>
                                 <mkdir dir="${web.root}/css/images/"/>
+                                <mkdir dir="${web.root}/images/"/>
 
                                 <get src="http://code.jquery.com/jquery-2.0.3.min.js"
                                      dest="${web.root}/js/jquery.js" skipexisting="true"/>
@@ -172,7 +173,12 @@
                                 <copy file="${project.build.directory}/bootstrap/css/bootstrap-responsive.min.css"
                                       tofile="${web.root}/css/bootstrap-responsive.min.css"/>
 
-
+<!--
+                                <get src="https://www.atlas-scientific.com/_images/_top_photos/top_logos/ph-logo.jpg" dest="${web.root}/images" skipexisting="true"/>
+                                <get src="https://www.atlas-scientific.com/_images/_top_photos/top_logos/orp-logo.jpg" dest="${web.root}/images" skipexisting="true"/>
+                                <get src="https://www.atlas-scientific.com/_images/_top_photos/top_logos/do-logo.jpg" dest="${web.root}/images" skipexisting="true"/>
+                                <get src="https://www.atlas-scientific.com/_images/_top_photos/top_logos/ec-logo.jpg" dest="${web.root}/images" skipexisting="true"/>
+-->
                             </target>
                         </configuration>
                         <goals>

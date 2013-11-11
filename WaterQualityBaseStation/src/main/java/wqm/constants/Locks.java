@@ -17,27 +17,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.data.highstock;
-
-import wqm.radio.RecordStorage.record.OneWireRecord;
-
-import java.util.*;
+package wqm.constants;
 
 /**
- * Date: 11/7/13
- * Time: 7:12 AM
+ * Date: 11/11/13
+ * Time: 7:18 AM
  *
  * @author NigelB
  */
-public class OneWireRecordConverter extends AbstractRecordConverter implements HighStockRecordConverter<OneWireRecord> {
+public enum Locks {
+    Station("lock_station"),
+    Sensor("lock_sensor"),
+    Phase("lock_phase");
+    private String lockName;
 
+    Locks(String lockName) {
 
-    public Class<OneWireRecord> getRecordType() {
-        return OneWireRecord.class;
+        this.lockName = lockName;
     }
 
-    public void convert(OneWireRecord data, Map<String, List> result) {
-        Object[] _result = new Object[]{data.getDate().getTime(), data.getValue()};
-        getSeries("Temperature", result).add(_result);
+    public String getLockName() {
+        return lockName;
     }
 }

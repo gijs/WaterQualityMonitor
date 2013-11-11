@@ -20,7 +20,7 @@
 package wqm.radio.RecordStorage.record;
 
 import org.apache.log4j.Logger;
-import wqm.config.AtlasSensor;
+import wqm.constants.AtlasSensor;
 import wqm.radio.util.Util;
 
 import java.util.Date;

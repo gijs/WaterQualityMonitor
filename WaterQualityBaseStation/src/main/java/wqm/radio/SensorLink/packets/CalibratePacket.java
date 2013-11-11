@@ -19,7 +19,7 @@
 
 package wqm.radio.SensorLink.packets;
 
-import wqm.config.AtlasSensor;
+import wqm.constants.AtlasSensor;
 
 import static wqm.radio.util.Util.*;
 
