@@ -240,6 +240,12 @@ public class WQMCalibrationController extends BaseWQMController {
             throw new RedirectException("/wqm/c");
         }
 
+        if (command.equalsIgnoreCase("done") && sensor == AtlasSensor.ORP) {
+            stationManager.quitCalibrationPhase(request.getSession(true), station, sensor);
+            request.getSession(true).setAttribute(Messages.SUCCESS_MESSAGE, "ORP Sensor calibrated.");
+            throw new RedirectException("/wqm/c");
+        }
+
         switch (sensor) {
             case DO:
             case PH:

@@ -20,9 +20,10 @@
 <%@taglib tagdir="/WEB-INF/tags" prefix="mytags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<mytags:layout title="Calibrate ${station.getCommonName()} ORP" view="calibrate" caching="false" logo="/images/orp-logo.jpg">
+<mytags:layout title="Calibrate ${station.getCommonName()} ORP" view="c" caching="false" logo="/images/orp-logo.jpg">
 
 <jsp:attribute name="head">
+    <script src="/js/calibrate.js"></script>
     <script src="/js/calibrate_orp.js"></script>
 </jsp:attribute>
 
@@ -30,14 +31,20 @@
     <jsp:body>
         <div id="calibrate_content" class="span5">
             <H3>${station.getCommonName()} ORP Calibration</H3>
-            Have a look at you calibration solution and note its mV rating. Then use the + and - buttons to match th
+            Have a look at you calibration solution and note its mV rating. Then use the + and - buttons to match the
             output of the sensor to the value of the calibration solution.
-            <div id="orp_graph"></div>
-
             <div id="calibration_button_1">
                 <table>
                     <tr>
-                        <td>
+                        <td colspan="2" >
+                            <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0/done">
+                                <button class="btn btn-default" type="submit">Done</button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <tr style="padding-top: 20px">
+                        <td >
                             <button onclick="callCommand('/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/${phase}/up', this)" class="btn btn-default" type="button">+</button>
                         </td>
                         <td>
@@ -46,16 +53,10 @@
                     </tr>
 
 
-                    <tr>
-                        <td colspan="2" style="padding-top: 50px">
-                            <form action="/wqm/c/${station.getCompactAddress()}/${sensor.getId()}/0/quit">
-                                <button class="btn btn-default" type="submit">Quit</button>
-                            </form>
-                        </td>
-                    </tr>
+
                 </table>
             </div>
-
+            <div id="orp_graph"></div>
             <script>
                 initORP("ORP Calibration", "orp_graph", "/wqm/d/${station.getCompactAddress()}/${sensor.getId()}/${phase}")
             </script>

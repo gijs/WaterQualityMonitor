@@ -23,6 +23,7 @@
 <mytags:layout title="Calibrate ${station.getCommonName()} ${sensor.getLongName()}" view="c" caching="false" logo="/images/ph-logo.jpg">
 
 <jsp:attribute name="head">
+    <script src="/js/calibrate.js"></script>
     <script src="/js/calibrate_ph.js"></script>
 </jsp:attribute>
 

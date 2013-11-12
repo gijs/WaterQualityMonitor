@@ -29,9 +29,12 @@
     <jsp:body>
         <div id="calibrate_content" class="span5">
             <H3>Oxidation Reduction Potential (ORP)</H3>
-
-            <p>To calibrate the ORP sensor, it is placed into the calibration solution and sampled continuity. Using the
-                + and - buttons adjust the output of the sensor to match the value of the calibration solution.</p>
+            <pr>To calibrate the ORP sensor: <ol>
+                <li>Place the probe into a known ORP calibration solution</li>
+                <li>Stir the ORP probe in the solution for approximately five seconds</li>
+                <li>Let the ORP probe sit for approximately one minute</li>
+                <li>Then press the next button.</li>
+            </ol></pr>
 
             <div id="calibration_button_1">
                 <table>
