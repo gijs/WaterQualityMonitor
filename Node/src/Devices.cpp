@@ -20,7 +20,8 @@
 #include "Devices.h"
 
 OneWire* Devices::bus;
-DallasTemperature* Devices::ds18b20;
+OneWire* Devices::bus_air;
+//DallasTemperature* Devices::ds18b20;
 XBee* Devices::xbee;
 RecordStorage* Devices::store;
 Atlas* Devices::atlas;
@@ -37,7 +38,8 @@ unsigned long doStartTime;
 
 uint32_t Devices::initilize_devices(
 		int sd_cs_pin,
-		uint8_t one_wire_bus_pin,
+		uint8_t in_water_one_wire_bus_pin, //This is the bus that is use to find the temperature of the water the sensors are in.
+		uint8_t other_one_wire_bus_pin, //This is the bus that is use to find the temperature of of the air and case etc.
 		Stream& xbee_stream,
 		uint8_t xbee_associate_pin,
 		/*SensorPosition* sensorMap,*/
@@ -82,8 +84,12 @@ uint32_t Devices::initilize_devices(
 		toRet |= ERROR_CODE_SD_FLAG;
 	}
 
-	Devices::bus = new OneWire(one_wire_bus_pin);
-	Devices::ds18b20 = new DallasTemperature(bus);
+	Devices::bus = new OneWire(in_water_one_wire_bus_pin);
+//	Devices::ds18b20 = new DallasTemperature(Devices::bus);
+//
+	Devices::bus_air = new OneWire(other_one_wire_bus_pin);
+//	Devices::ds18b20 = new DallasTemperature(Devices::bus_air);
+
 
 	RTC.set33kHzOutput(false);
 	RTC.clearAlarmFlag(3);
@@ -556,7 +562,7 @@ void Devices::sample()
 {
 	DEBUG_LN("Sample: ");
 	Sample sample;
-	Devices::log_onewire(sample);
+	Devices::log_onewire(sample, Devices::bus);
 	if(!isnan(sample.temperature)){
 
 		_DEBUG("Temperature: ");
@@ -622,27 +628,29 @@ void Devices::sample()
 			store->storeRecord((byte*)&rec, sizeof(FloatRecord));
 		}
 	}
+	Devices::log_onewire(sample, Devices::bus_air);
 }
 
 
-void Devices::log_onewire(Sample &sample)
+void Devices::log_onewire(Sample &sample, OneWire* _bus)
 {
 //	tmElements_t time;
 
-	Devices::bus->reset_search();
+	_bus->reset_search();
+	DallasTemperature _ds18b20(_bus);
 	uint8_t address[8];
 	boolean found = false;
-	Devices::ds18b20->begin();
-	Devices::ds18b20->requestTemperatures();
+	_ds18b20.begin();
+	_ds18b20.requestTemperatures();
 //	RTC.read(time);
 	time_t time = RTC.get();
-	while (Devices::bus->search(address)) {
+	while (_bus->search(address)) {
 		if (OneWire::crc8(address, 7) == address[7]) {
 			switch (address[0]) {
 			case 0x28:
 			case 0x10:
 				found = true;
-				Devices::log_ds18b20(address, time, sample);
+				Devices::log_ds18b20(address, time, sample, &_ds18b20);
 				break;
 			default:
 				break;
@@ -664,15 +672,18 @@ void Devices::log_onewire(Sample &sample)
 	}
 }
 
-void Devices::log_ds18b20(uint8_t* address, time_t time, Sample &sample)
+void Devices::log_ds18b20(uint8_t* address, time_t time, Sample &sample, DallasTemperature* _ds18b20)
 {
 	OneWireRecord rec;
 	for(int i = 0; i < 8; i++)
 	{
 		rec.id[i] = address[i];
 	}
-
-	double temp = Devices::ds18b20->getTempC(address);
+	if(_ds18b20->getResolution(address) != TEMP_12_BIT)
+	{
+		_ds18b20->setResolution(address, TEMP_12_BIT);
+	}
+	double temp = _ds18b20->getTempC(address);
 	if(!isnan(temp) && temp < DS18B20_ERROR_TEMP)
 	{
 		rec.value = temp;
@@ -682,6 +693,10 @@ void Devices::log_ds18b20(uint8_t* address, time_t time, Sample &sample)
 		{
 			sample.temperature = temp;
 		}
+		_DEBUG("\tTemperature ");
+		displayOneWireAddress(address, 8, &DEBUG_STREAM);
+		DEBUG(": ");
+		DEBUG_LN(temp);
 	}
 }
 

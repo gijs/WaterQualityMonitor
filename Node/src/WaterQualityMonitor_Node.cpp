@@ -66,7 +66,8 @@ void setup()
 
 	uint32_t device_status = Devices::initilize_devices(
 			4, 				//SD CS pin
-			32, 			//OneWire Bus
+			32, 			//In Water OneWire Bus
+			34,				//In Air one Wire Bus
 			Serial, 		//XBee Serial Port
 			A0,
 //			sensorMap,  	//Atlas Sensor Map

@@ -68,7 +68,8 @@ namespace Devices
 {
 
 	extern OneWire* bus;
-	extern DallasTemperature* ds18b20;
+	extern OneWire* bus_air;
+//	extern DallasTemperature* ds18b20;
 	extern XBee* xbee;
 	extern RecordStorage* store;
 	extern Atlas* atlas;
@@ -81,6 +82,7 @@ namespace Devices
 	uint32_t initilize_devices(
 			int sd_cs_pin,
 			uint8_t one_wire_bus_pin,
+			uint8_t other_one_wire_bus_pin,
 			Stream& xbee_bus,
 			uint8_t xbee_associate_pin,
 //			SensorPosition* sensorMap,
@@ -93,8 +95,8 @@ namespace Devices
 
 	bool setupXbee(Stream& xbee_stream, uint8_t xbee_associate_pin);
 
-	void log_onewire(Sample &sample);
-	void log_ds18b20(uint8_t* address, time_t time, Sample &sample);
+	void log_onewire(Sample &sample, OneWire* _bus);
+	void log_ds18b20(uint8_t* address, time_t time, Sample &sample, DallasTemperature* _ds18b20);
 	void displayDate(time_t time, Stream* displayOn);
 	void displayDate(tmElements_t* toDisplay, Stream* displayOn);
 	void displayOneWireAddress(uint8_t* address, uint8_t address_length, Stream* displayOn);
