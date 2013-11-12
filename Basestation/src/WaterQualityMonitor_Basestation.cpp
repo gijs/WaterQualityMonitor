@@ -19,7 +19,7 @@
 
 #include "WaterQualityMonitor_Basestation.h"
 
-int32_t max_record_size = max_record_size(sizeof(DoubleRecord), sizeof(OneWireRecord), sizeof(SalinityRecord));
+int32_t max_record_size = max_record_size(sizeof(FloatRecord), sizeof(OneWireRecord), sizeof(SalinityRecord));
 
 void setup()
 {
