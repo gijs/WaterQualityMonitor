@@ -335,12 +335,15 @@ void accept_sensor_calibration(CalibratePacket* calibrate_packet)
 			break;
 			case SENSORLINK_CALIBRATION_FLAG_ACCEPT_1: //Dry Phase
 				DEBUG_LN("Accept Dry Phase");
+				Devices::atlas->calibrateEC(Dry);
 				break;
 			case SENSORLINK_CALIBRATION_FLAG_ACCEPT_2: //High Phase
 				DEBUG_LN("Accept High Phase");
+				Devices::atlas->calibrateEC(High);
 				break;
 			case SENSORLINK_CALIBRATION_FLAG_ACCEPT_3: //Low Phase
 				DEBUG_LN("Accept Low Phase");
+				Devices::atlas->calibrateEC(Low);
 				break;
 
 
