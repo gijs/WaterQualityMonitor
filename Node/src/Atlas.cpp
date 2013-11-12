@@ -437,14 +437,46 @@ bool Atlas::startContinuous(Sensor sensor)
 
 }
 
-void Atlas::calibratePH(PHCalibration val)
+bool Atlas::calibratePH(PHCalibration val)
 {
-	DEBUG("Accept ");
-	DEBUG_LN(val);
+	bool toRet = false;
+	if(CMODE == PH)
+	{
+		switch(val)
+		{
+		case Four:
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(PH_FOUR_CALIBRATION_COMMAND);
+			sensor_stream->print(carrage_return);
+			toRet = true;
+			break;
+		case Seven:
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(PH_SEVEN_CALIBRATION_COMMAND);
+			sensor_stream->print(carrage_return);
+			toRet = true;
+			break;
+		case Ten:
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(PH_TEN_CALIBRATION_COMMAND);
+			sensor_stream->print(carrage_return);
+			toRet = false;
+			break;
+		default:
+			toRet = true;
+			break;
+		}
+		if(toRet)
+		{
+			DEBUG_LN(sensor_stream->readStringUntil(carrage_return));
+		}
+	}
+	return toRet;
 }
 
-void Atlas::calibrateORP(ORPCalibration val)
+bool Atlas::calibrateORP(ORPCalibration val)
 {
+	bool toRet = false;
 	if(CMODE == ORP)
 	{
 		switch(val)
@@ -453,20 +485,31 @@ void Atlas::calibrateORP(ORPCalibration val)
 			sensor_stream->print(carrage_return);
 			sensor_stream->print(ORP_CALIBRATE_PLUS_COMMAND);
 			sensor_stream->print(carrage_return);
+			toRet = true;
 			break;
+
 		case Minus:
 			sensor_stream->print(carrage_return);
 			sensor_stream->print(ORP_CALIBRATE_MINUS_COMMAND);
 			sensor_stream->print(carrage_return);
+			toRet = true;
 			break;
+		default:
+			toRet = false;
+			break;
+		}
+		if(toRet)
+		{
+			DEBUG_LN(sensor_stream->readStringUntil(carrage_return));
 		}
 	}else
 	{
 		DEBUG_LN("ERROR: Calibration called on ORP when not in continuous mode.");
 	}
+	return toRet;
 }
 
-void Atlas::calibrateDO()
+bool Atlas::calibrateDO()
 {
 	if(CMODE == DO)
 	{

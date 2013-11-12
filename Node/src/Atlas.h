@@ -29,11 +29,17 @@ static char END_COMMAND = 'E';
 static char IDENTIFY_COMMAND = 'I';
 static char SINGLE_SAMPLE_COMMAND = 'R';
 static char CONTINUOUS_COMMAND = 'C';
+
 static char ORP_CALIBRATE_PLUS_COMMAND = '+';
 static char ORP_CALIBRATE_MINUS_COMMAND = '-';
 static char DO_CALIBRATE_COMMAND = 'M';
 static char EC_SENSOR_TYPE_COMMAND = 'P';
-static char EC_CALIBRATION_COMMAND = 'P';
+static char EC_CALIBRATION_COMMAND = 'Z';
+
+static char PH_FOUR_CALIBRATION_COMMAND = 'F';
+static char PH_SEVEN_CALIBRATION_COMMAND = 'S';
+static char PH_TEN_CALIBRATION_COMMAND = 'T';
+
 
 enum Sensor {
 	PH, DO, ORP, EC
@@ -120,9 +126,9 @@ public:
 	double continuousEC(double temperature, int32_t &us, int32_t &ppm, int32_t &salinity);
 	void   endContinuous();
 
-	void calibratePH(PHCalibration val);
-	void calibrateORP(ORPCalibration val);
-	void calibrateDO();
+	bool calibratePH(PHCalibration val);
+	bool calibrateORP(ORPCalibration val);
+	bool calibrateDO();
 	bool calibrateEC(ECCalibration val);
 	void setECType(ECSensorType type);
 };
