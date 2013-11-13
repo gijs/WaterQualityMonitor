@@ -66,9 +66,10 @@ void setup()
 	DEBUG("Serial Buffer Size: ");
 	DEBUG_LN(SERIAL_BUFFER_SIZE); // If you define SERIAL_BUFFER_SIZE to be the size of the
 								  // maximum radio packet size then a whole packet can sit
-								  // in the buffer without being acknowledged by the radio
-								  // but invalid by the arduino as the ring buffer has
-								  // overwritten it.
+								  // in the buffer. Otherwise it will be  acknowledged by
+								  // the radio but can be invalid by the time the arduino
+								  // parses it, as the packet can be overwritten in the
+								  // ring buffer.
 	delay(2000);
 
 	uint32_t device_status = Devices::initilize_devices(
