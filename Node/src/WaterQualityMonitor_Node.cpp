@@ -77,7 +77,7 @@ void setup()
 			32, 			//In Water OneWire Bus
 			34,				//In Air one Wire Bus
 			Serial, 		//XBee Serial Port
-			A0,
+			A0,				//Associate pin
 //			sensorMap,  	//Atlas Sensor Map
 			33, 			//Atlas E Pin
 			35, 			//Atlas SO Pin
@@ -99,6 +99,10 @@ void setup()
 	status.flags = SENSORLINK_STATUS_FLAG_OK;
 	status.codes = 0;
 	Devices::send_status(&status);
+
+	CLI prompt("#> ", &DEBUG_STREAM, 13, 120);
+	prompt.wait_for_input(5, &setup_cli);
+
 	if(analogRead(A1) <= XBEE_ASSOCIATE_THRESHOLD)
 	{
 		downtime("Aligning to boundary");
@@ -123,6 +127,12 @@ void loop()
 	downtime("Sleeping...");
 }
 
+void setup_cli(CLI* prompt)
+{
+	CLI_RTC::initialize(prompt, &RTC);
+	Devices::initialize_cli(prompt);
+}
+
 void downtime(const char* message)
 {
 	unsigned long start = millis();
@@ -137,10 +147,13 @@ void downtime(const char* message)
 	Devices::displayDate(&_t, &DEBUG_STREAM);
 
 	is_downtime = true;
+	unsigned long interval, current;
+	interval = ((unsigned long)sample_interval) * 2000;
 	while(is_downtime){
 		XBeeUtil::wait_for_packet_type(Devices::xbee, 50, 0xFFFFF, NULL, Devices::queue_packet);
 		handle_queue();
-		if((millis() - start) >  (sample_interval * 2000))
+		current = millis() - start;
+		if(current > interval)
 		{
 			is_downtime = false;
 			DEBUG_LN("Two periods spent in downtime, waking up anyway.");
@@ -152,7 +165,7 @@ void downtime(const char* message)
 
 void handle_queue()
 {
-	list_node<XBeeResponse>* tmp;
+	list_node_ptr<XBeeResponse>* tmp;
 	while(Devices::packet_queue_head != NULL)
 	{
 		tmp = Devices::packet_queue_head;
