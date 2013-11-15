@@ -25,9 +25,6 @@
 #include "CLI.h"
 #include "cli_util.h"
 
-//const prog_uchar RTC_SET_HELP_LINE_[] PROGMEM  = {};
-//const prog_uchar RTC_SET_HELP_LINE_[] PROGMEM  = {};
-
 namespace CLI_RTC
 {
 	extern DS3232RTC* RTC;
