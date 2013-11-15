@@ -43,6 +43,7 @@ void setup();
 #define SAMPLE_MATCH_MONTH 32
 #define SAMPLE_MATCH_YEAR 64
 
+void setup_cli(CLI* prompt);
 void downtime(const char* message);
 void upload();
 void handle_queue();
