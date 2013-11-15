@@ -31,6 +31,10 @@
 #include "Records.h"
 #include "EEPROM.h"
 #include "XBeeUtil.h"
+#include "CLI.h"
+#include "cli_rtc.h"
+
+
 
 #define LEADING_ZERO(STREAM, value) if(value < 10){STREAM->print(0);}
 #define XBBE_SINK_ADDRESS_MAGIC_NUMBER 0xDEADBEEF
@@ -56,16 +60,20 @@ struct XBeeSinkAddress
 	XBeeSinkAddress(): magic_number(XBBE_SINK_ADDRESS_MAGIC_NUMBER), DH(0x0), DL(BROADCAST_ADDRESS){};
 };
 
-template<typename T> struct list_node
+template<typename T> struct list_node_ptr
 {
 	T* node;
-	list_node<T>* next;
-	list_node():
+	list_node_ptr<T>* next;
+	list_node_ptr():
 		node(NULL), next(NULL){};
 };
 
 namespace Devices
 {
+	const prog_char FIND_SINK_COMMAND_NAME[] PROGMEM  = {"find_sink"};
+	const prog_char FIND_SINK_DESCRIPTION[] PROGMEM  = {"Search for and set the sink node."};
+	const prog_char CLEAR_SINK_COMMAND_NAME[] PROGMEM  = {"clear_sink"};
+	const prog_char CLEAR_SINK_DESCRIPTION[] PROGMEM  = {"Erase the current sink node's address from the EEPROM."};
 
 	extern OneWire* bus;
 	extern OneWire* bus_air;
@@ -74,7 +82,7 @@ namespace Devices
 	extern RecordStorage* store;
 	extern Atlas* atlas;
 	extern XBeeSinkAddress* sink_address;
-	extern list_node<XBeeResponse> *packet_queue_head; //, *packet_queue_tail;
+	extern list_node_ptr<XBeeResponse> *packet_queue_head; //, *packet_queue_tail;
 
 	extern int32_t SH;
 	extern int32_t SL;
@@ -118,6 +126,14 @@ namespace Devices
 
 	uint16_t write_eeprom(byte* loc, uint16_t eeprom_position, uint16_t count);
 	uint16_t read_eeprom(byte* loc, uint16_t eeprom_position, uint16_t count);
+
+
+
+	int initialize_cli(CLI* prompt);
+	int find_sink_callback(char** argv, int argc, Environment* env);
+	int find_sink_help_callback(char** argv, int argc, Environment* env);
+	int clear_sink_callback(char** argv, int argc, Environment* env);
+	int clear_sink_help_callback(char** argv, int argc, Environment* env);
 }
 
 
