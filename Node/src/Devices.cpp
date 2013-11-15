@@ -26,7 +26,7 @@ XBee* Devices::xbee;
 RecordStorage* Devices::store;
 Atlas* Devices::atlas;
 XBeeSinkAddress* Devices::sink_address;
-list_node<XBeeResponse>* Devices::packet_queue_head = NULL;
+list_node_ptr<XBeeResponse>* Devices::packet_queue_head = NULL;
 //list_node<XBeeResponse>* Devices::packet_queue_tail = NULL;
 
 int32_t Devices::SH;
@@ -169,11 +169,24 @@ bool Devices::findSink()
 	{
 		ZBTxStatusResponse response;
 		Devices::xbee->getResponse(response);
-		if(XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_RX_RESPONSE, Devices::matchSinkPacket, Devices::queue_packet))
+
+		XBeeResponse* packet;
+		bool in_queue = Devices::search_and_retrieve_from_queue(SENSORLINK_SINK_PACKET, packet);
+		if(in_queue | XBeeUtil::wait_for_packet_type(Devices::xbee, 5000, ZB_RX_RESPONSE, Devices::matchSinkPacket, Devices::queue_packet))
 		{
-			ZBRxResponse request;
-			Devices::xbee->getResponse(request);
-			byte* data = request.getData();
+			ZBRxResponse* request;
+			if(in_queue)
+			{
+				DEBUG_LN("Found in queue");
+				request = static_cast<ZBRxResponse*>(packet);
+			}else
+			{
+				ZBRxResponse _request;
+				Devices::xbee->getResponse(_request);
+				request = &_request;
+			}
+
+			byte* data = request->getData();
 			SinkPacket* packet = (SinkPacket*)data;
 
 			Devices::sink_address->magic_number = XBBE_SINK_ADDRESS_MAGIC_NUMBER;
@@ -440,8 +453,8 @@ bool Devices::search_and_retrieve_from_queue(uint32_t packet_type, XBeeResponse*
 		return false;
 	}
 //	_DEBUG_LN("Searching for packet.");
-	list_node<XBeeResponse>* prev = Devices::packet_queue_head;
-	list_node<XBeeResponse>* current = Devices::packet_queue_head;
+	list_node_ptr<XBeeResponse>* prev = Devices::packet_queue_head;
+	list_node_ptr<XBeeResponse>* current = Devices::packet_queue_head;
 	while(current != NULL)
 	{
 		if(current->node->getApiId() == ZB_RX_RESPONSE)
@@ -470,16 +483,16 @@ bool Devices::search_and_retrieve_from_queue(uint32_t packet_type, XBeeResponse*
 
 void _queue_packet(XBeeResponse* packet)
 {
-	DEBUG("Queued packet with API id: ");
-	DEBUG_LN(packet->getApiId());
+	DEBUG("Queued packet with API id: 0x");
+	DEBUG_LN_(packet->getApiId(), HEX);
 	if(Devices::packet_queue_head == NULL)
 	{
-		Devices::packet_queue_head = new list_node<XBeeResponse>();
+		Devices::packet_queue_head = new list_node_ptr<XBeeResponse>();
 		Devices::packet_queue_head->node = packet;
 	}else
 	{
-		list_node<XBeeResponse>* tmp = new list_node<XBeeResponse>();
-		list_node<XBeeResponse>* current = NULL;
+		list_node_ptr<XBeeResponse>* tmp = new list_node_ptr<XBeeResponse>();
+		list_node_ptr<XBeeResponse>* current = NULL;
 		tmp->node = packet;
 		tmp->next = NULL;
 		current = Devices::packet_queue_head;
@@ -783,3 +796,34 @@ uint16_t Devices::read_eeprom(byte* loc, uint16_t eeprom_position, uint16_t coun
 	}
 	return i;
 }
+
+int Devices::initialize_cli(CLI* prompt)
+{
+	flash_copy_local(find_command_name, FIND_SINK_COMMAND_NAME);
+	flash_copy_local(find_command_desc, FIND_SINK_DESCRIPTION);
+	flash_copy_local(clear_command_name, CLEAR_SINK_COMMAND_NAME);
+	flash_copy_local(clear_command_desc, CLEAR_SINK_DESCRIPTION);
+	prompt->register_command(find_command_name, find_command_desc, &Devices::find_sink_callback, &Devices::find_sink_help_callback);
+	prompt->register_command(clear_command_name, clear_command_desc, &Devices::clear_sink_callback, &Devices::clear_sink_help_callback);
+	return 0;
+}
+int Devices::find_sink_callback(char** argv, int argc, Environment* env) {
+	Devices::findSink();
+	return 0;
+}
+int Devices::find_sink_help_callback(char** argv, int argc, Environment* env) {
+	flash_println(env->input, FIND_SINK_DESCRIPTION);
+	env->input->println();
+	flash_println(env->input, CLI_RTC::RTC_SET_HELP_LINE_2);
+	env->input->println();
+	flash_println(env->input, FIND_SINK_COMMAND_NAME);
+	return 0;
+}
+int Devices::clear_sink_callback(char** argv, int argc, Environment* env) {
+	EEPROM.write(XBEE_SINK_ADDRESS_EEPROM_POSITION, 0);
+	return 0;
+}
+int Devices::clear_sink_help_callback(char** argv, int argc, Environment* env) {
+	return 0;
+}
+
