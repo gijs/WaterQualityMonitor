@@ -71,15 +71,15 @@ public class Util {
         }
     }
 
-//    public static void _putInt(int[] data, int offset, int value) {
-//        byte _data[] = new byte[4];
-//        ByteBuffer buf = ByteBuffer.wrap(_data);
-//        buf.putInt(value);
-//
-//        for (int pos = offset, count = 0; count < 4; pos++, count++) {
-//            data[pos] = _data[count];
-//        }
-//    }
+    public static void _putInt(int[] data, int offset, int value) {
+        byte _data[] = new byte[4];
+        ByteBuffer buf = ByteBuffer.wrap(_data);
+        buf.putInt(value);
+
+        for (int pos = offset, count = 0; count < 4; pos++, count++) {
+            data[pos] = _data[count];
+        }
+    }
 
     private static ByteBuffer littleEndianGrab(int[] data, int offset, int size)
     {

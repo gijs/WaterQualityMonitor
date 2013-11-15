@@ -19,6 +19,7 @@
 
 package wqm.radio.SensorLink.packets;
 
+import static wqm.radio.util.Util._putInt;
 import static wqm.radio.util.Util.getInt;
 import static wqm.radio.util.Util.putInt;
 
@@ -54,12 +55,14 @@ public class SinkSearch extends SensorLinkPacket{
     }
 
     public void setDH(int DH){
-        putInt(data, DH_OFFSET, DH);
+//        putInt(data, DH_OFFSET, DH);
+        _putInt(data, DH_OFFSET, DH);
     }
 
     public void setDL(int DL)
     {
-        putInt(data, DL_OFFSET, DL);
+//        putInt(data, DL_OFFSET, DL);
+        _putInt(data, DL_OFFSET, DL);
     }
 
     public int getDL()

@@ -44,9 +44,8 @@ public class SinkSearchHandler implements PacketHandler<SinkSearch> {
             XBeeAddress64 address = xbeeResponse.getRemoteAddress64();
             ZNetTxRequest tx = new ZNetTxRequest(address, ctx.getSinkPacket().getData());
             try {
-                ctx.getQueue().put(new TimedPacket(tx, System.currentTimeMillis() + 500));
+                ctx.getQueue().put(new TimedPacket(tx, System.currentTimeMillis()));
                 logger.trace(tx);
-                ctx.getSender().interrupt();
             } catch (InterruptedException e) {
                 logger.error("Error adding packet to queue", e);
             }
