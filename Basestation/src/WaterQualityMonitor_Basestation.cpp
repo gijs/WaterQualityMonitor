@@ -26,6 +26,7 @@ void setup()
 	Serial.begin(57600);
 	SoftwareSerial* debug = new SoftwareSerial(8,9);
 	debug->begin(9600);
+	debug->println("Starting...");
 	Devices::flash_println(debug, WQM_Strings::STARTING);
 	uint64_t result = Devices::initilize_devices(10, "data1.wqm", max_record_size, &Serial, debug);
 	if(result > 0)
