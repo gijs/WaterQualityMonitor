@@ -23,10 +23,14 @@
 static char colon = ':';
 static char comma = ',';
 static char space = ' ';
+static char dot = '.';
 static char slash = '/';
 static char percent = '%';
 static char tab = '\t';
 static char carrage_return = '\r';
+static const char* path_sep = "/";
+static const char backspace = '\b';
+static const char colen = ':';
 
 #define DEBUG_STREAM Serial1
 #define START_DEBUG_STREAM(baud_rate) DEBUG_STREAM.begin(baud_rate);
