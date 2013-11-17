@@ -66,6 +66,12 @@ public class Stations {
     }
 
     public void addAddress(XBeeAddress64 addr) {
-        stations.add(new Station(null, addr));
+        Station toAdd = new Station(null, addr);
+        String compactAddress = toAdd.getCompactAddress();
+        if(!stat.containsKey(compactAddress))
+        {
+            stations.add(toAdd);
+            stat.put(compactAddress, toAdd);
+        }
     }
 }
