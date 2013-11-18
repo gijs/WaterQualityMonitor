@@ -397,7 +397,15 @@ int CLI::help(char** argv, int argc)
 		if(tmp != NULL && tmp->node.help_callback != NULL)
 		{
 			tmp->node.help_callback(argv, argc, env);
-		}else
+		}else if(tmp != NULL && tmp->node.help_callback == NULL)
+		{
+			env->input->println(tmp->node.brief_description);
+			env->input->println();
+			flash_println(env->input, USAGE);
+			env->input->println();
+			env->input->println(tmp->node.command);
+		}
+		else
 		{
 			flash_print(input, CLI_HELP_NOT_FOUND);
 			input->print(argv[1]);
