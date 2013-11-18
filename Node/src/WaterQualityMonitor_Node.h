@@ -43,6 +43,11 @@ void setup();
 #define SAMPLE_MATCH_MONTH 32
 #define SAMPLE_MATCH_YEAR 64
 
+const prog_char SAMPLE_COMMAND_NAME[] PROGMEM  = {"sample"};
+const prog_char SAMPLE_DESCRIPTION[] PROGMEM  = {"Conduct a sample of the sensors."};
+const prog_char UPLOAD_COMMAND_NAME[] PROGMEM  = {"upload"};
+const prog_char UPLOAD_DESCRIPTION[] PROGMEM  = {"Upload the data to the basestation."};
+
 void setup_cli(CLI* prompt);
 void downtime(const char* message);
 void upload();
@@ -53,6 +58,11 @@ bool do_upload();
 bool isDataHandled(ZBTxStatusResponse &response);
 time_t wakeup_at();
 void INT0_ISR();
+
+int initialize_cli(CLI* prompt);
+int sample_callback(char** argv, int argc, Environment* env);
+int upload_callback(char** argv, int argc, Environment* env);
+
 
 void set_sample_count();
 

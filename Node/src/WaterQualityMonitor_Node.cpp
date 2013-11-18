@@ -89,18 +89,20 @@ void setup()
 	);
 	StatusPacket status;
 	status.init();
+	CLI prompt("#> ", &DEBUG_STREAM, 13, 120);
 	if(device_status > 0)
 	{
 		DEBUG("Error initializing device: ");
 		DEBUG_LN(device_status);
-		while(true){};
+		setup_cli(&prompt);
+		while(true){prompt.run_cli();};
 	}
 	set_sample_count();
 	status.flags = SENSORLINK_STATUS_FLAG_OK;
 	status.codes = 0;
 	Devices::send_status(&status);
 
-	CLI prompt("#> ", &DEBUG_STREAM, 13, 120);
+
 	prompt.wait_for_input(5, &setup_cli);
 
 	if(analogRead(A1) <= XBEE_ASSOCIATE_THRESHOLD)
@@ -131,6 +133,7 @@ void setup_cli(CLI* prompt)
 {
 	CLI_RTC::initialize(prompt, &RTC);
 	Devices::initialize_cli(prompt);
+	initialize_cli(prompt);
 }
 
 void downtime(const char* message)
@@ -356,6 +359,34 @@ void upload()
 	}
 }
 
+int initialize_cli(CLI* prompt)
+{
+	flash_copy_local(sample_command_name, SAMPLE_COMMAND_NAME);
+	flash_copy_local(sample_command_desc, SAMPLE_DESCRIPTION);
+	prompt->register_command(sample_command_name, sample_command_desc, &sample_callback, NULL);
+
+	flash_copy_local(upload_command_name, UPLOAD_COMMAND_NAME);
+	flash_copy_local(upload_command_desc, UPLOAD_DESCRIPTION);
+	prompt->register_command(upload_command_name, upload_command_desc, &upload_callback, NULL);
+
+	return 0;
+}
+
+int sample_callback(char** argv, int argc, Environment* env)
+{
+	Devices::sample();
+	return 0;
+}
+
+int upload_callback(char** argv, int argc, Environment* env)
+{
+	upload();
+	return 0;
+}
+
+int upload_help_callback(char** argv, int argc, Environment* env) {
+
+}
 
 void INT0_ISR()
 {
