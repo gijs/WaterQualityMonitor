@@ -131,9 +131,7 @@ namespace Devices
 
 	int initialize_cli(CLI* prompt);
 	int find_sink_callback(char** argv, int argc, Environment* env);
-	int find_sink_help_callback(char** argv, int argc, Environment* env);
 	int clear_sink_callback(char** argv, int argc, Environment* env);
-	int clear_sink_help_callback(char** argv, int argc, Environment* env);
 }
 
 

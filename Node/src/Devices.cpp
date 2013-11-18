@@ -803,27 +803,18 @@ int Devices::initialize_cli(CLI* prompt)
 	flash_copy_local(find_command_desc, FIND_SINK_DESCRIPTION);
 	flash_copy_local(clear_command_name, CLEAR_SINK_COMMAND_NAME);
 	flash_copy_local(clear_command_desc, CLEAR_SINK_DESCRIPTION);
-	prompt->register_command(find_command_name, find_command_desc, &Devices::find_sink_callback, &Devices::find_sink_help_callback);
-	prompt->register_command(clear_command_name, clear_command_desc, &Devices::clear_sink_callback, &Devices::clear_sink_help_callback);
+	prompt->register_command(find_command_name, find_command_desc, &Devices::find_sink_callback, NULL);
+	prompt->register_command(clear_command_name, clear_command_desc, &Devices::clear_sink_callback, NULL);
 	return 0;
 }
 int Devices::find_sink_callback(char** argv, int argc, Environment* env) {
 	Devices::findSink();
 	return 0;
 }
-int Devices::find_sink_help_callback(char** argv, int argc, Environment* env) {
-	flash_println(env->input, FIND_SINK_DESCRIPTION);
-	env->input->println();
-	flash_println(env->input, CLI_RTC::RTC_SET_HELP_LINE_2);
-	env->input->println();
-	flash_println(env->input, FIND_SINK_COMMAND_NAME);
-	return 0;
-}
+
 int Devices::clear_sink_callback(char** argv, int argc, Environment* env) {
 	EEPROM.write(XBEE_SINK_ADDRESS_EEPROM_POSITION, 0);
 	return 0;
 }
-int Devices::clear_sink_help_callback(char** argv, int argc, Environment* env) {
-	return 0;
-}
+
 
