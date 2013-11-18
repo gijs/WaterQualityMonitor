@@ -40,39 +40,44 @@ Atlas::Atlas(Stream* sensor_stream, uint8_t e_pin, uint8_t so_pin, uint8_t si_pi
 
 void Atlas::probe_ports() {
 	for (int i = 0; i < ATLAS_MAX_SENSORS; i++) {
-		for(int j = 0; j < 5; j++)
-		{
-		select(i);
-		enable();
-		delay(20);
-		sensor_stream->print(carrage_return);
-		sensor_stream->print(END_COMMAND);
-		sensor_stream->print(carrage_return);
-		clean_sensor_port();
-		delay(100);
-		sensor_stream->print(carrage_return);
-		sensor_stream->print(END_COMMAND);
-		sensor_stream->print(carrage_return);
-		clean_sensor_port();
-		sensor_stream->print(carrage_return);
-		sensor_stream->print(IDENTIFY_COMMAND);
-		sensor_stream->print(carrage_return);
-		String version = sensor_stream->readStringUntil(carrage_return);
-		_DEBUG(i);
-		_DEBUG(" Version: ");
-		_DEBUG_LN(version);
+		for (int j = 0; j < 5; j++) {
+			select(i);
+			enable();
+			delay(100);
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(END_COMMAND);
+			sensor_stream->print(carrage_return);
+			clean_sensor_port();
+			delay(100);
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(END_COMMAND);
+			sensor_stream->print(carrage_return);
+			clean_sensor_port();
+			sensor_stream->print(carrage_return);
+			sensor_stream->print(IDENTIFY_COMMAND);
+			sensor_stream->print(carrage_return);
+			String version = sensor_stream->readStringUntil(carrage_return);
+			_DEBUG(i);
+			_DEBUG(" Version: ");
+			_DEBUG_LN(version);
 
-		if (version.length() > 0) {
+			if (version.length() > 0) {
 
-			if(parse_version(version, i))
-			{
-				break;
+				if (parse_version(version, i)) {
+					break;
+				} else {
+					DEBUG("Could not parse ID: ");
+					DEBUG_LN(version);
+					delay(1000);
+				}
+
+			} else {
+				DEBUG_LN("No ID returned.");
+				delay(1000);
 			}
-
-		}
 //		sensor_stream->print('L1');
 //		sensor_stream->print(carrage_return);
-		disable();
+			disable();
 		}
 	}
 }
@@ -511,11 +516,15 @@ bool Atlas::calibrateORP(ORPCalibration val)
 
 bool Atlas::calibrateDO()
 {
+	DEBUG_LN("Calibrate DO");
 	if(CMODE == DO)
 	{
+		DEBUG_LN("We are in Continuous mode.");
+		DEBUG_LN(sensor_stream->readStringUntil(carrage_return));
 		sensor_stream->print(carrage_return);
 		sensor_stream->print(DO_CALIBRATE_COMMAND);
 		sensor_stream->print(carrage_return);
+		DEBUG_LN(sensor_stream->readStringUntil(carrage_return));
 	}else
 	{
 		DEBUG_LN("ERROR: Calibration called on DO when not in continuous mode.");
