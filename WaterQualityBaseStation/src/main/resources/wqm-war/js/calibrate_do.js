@@ -25,18 +25,13 @@ function enableButton(do_accept_button, time_element) {
         var seconds = Math.floor((count - (minutes * (60 * 1000)))/1000);
         var _sec = ("0" +seconds).slice (-2);
         console.log(minutes + ":" + _sec);
-        console.log(time_element);
-//        $(time_element).replaceWith(minutes + ":" + _sec);
         time_element.innerHTML = (minutes + ":" + _sec);
         if (count > 0) {
             count -= 1000;
 
         } else {
-
             do_accept_button.disabled = false;
-            alert("dsdsdsd");
             clearInterval(wakeupButton);
-
         }
     }
     return doEnable;
