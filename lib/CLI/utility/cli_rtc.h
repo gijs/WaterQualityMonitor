@@ -44,7 +44,7 @@ namespace CLI_RTC
 	const prog_char RTC_UNKNOWN_OPTION[] PROGMEM  = {"Unknown option: "};
 
 	const prog_char RTC_SET_HELP_LINE_1[] PROGMEM  = {"Welcome to the RTC Time Setting Utility."};
-	const prog_char RTC_SET_HELP_LINE_2[] PROGMEM  = {"Usage:"};
+//	const prog_char RTC_SET_HELP_LINE_2[] PROGMEM  = {"Usage:"};
 	const prog_char RTC_SET_HELP_LINE_3[] PROGMEM  = {"\trtc set <YEAR> <MONTH> <DAY> <HOUR24> <MINUTE> <SECOND> <DAY_OF_WEEK>"};
 	const prog_char RTC_SET_HELP_LINE_4[] PROGMEM  = {"\tExample:"};
 	const prog_char RTC_SET_HELP_LINE_5[] PROGMEM  = {"\t\tCurrent RTC Time: "};

@@ -102,7 +102,7 @@ int rtc_help_callback(char** argv, int argc, Environment* env)
 			flash_println(env->input, CLI_RTC::RTC_SET_HELP_LINE_1);
 
 			env->input->println();
-			flash_println(env->input, CLI_RTC::RTC_SET_HELP_LINE_2);
+			flash_println(env->input, USAGE);
 
 			env->input->println();
 			flash_println(env->input, CLI_RTC::RTC_SET_HELP_LINE_3);
@@ -163,7 +163,7 @@ int rtc_help_callback(char** argv, int argc, Environment* env)
 	}else if(argc == 3 && strcmp(argv[2], COMMAND_GET) == 0)
 	{
 		env->input->println();
-		flash_println(env->input, CLI_RTC::RTC_SET_HELP_LINE_2);
+		flash_println(env->input, USAGE);
 		env->input->println();
 		flash_println(env->input, CLI_RTC::RTC_SET_HELP_LINE_10);
 	}

@@ -45,6 +45,8 @@ const prog_char CLI_STRING[] PROGMEM  = {"CLI"};
 const prog_char TIMEOUT[] PROGMEM  = {"Timeout"};
 const prog_char SECONDS[] PROGMEM  = {"seconds"};
 
+const prog_char USAGE[] PROGMEM  = {"Usage:"};
+
 static const char* exit_code = {"EXIT"};
 
 template<typename T> struct list_node
