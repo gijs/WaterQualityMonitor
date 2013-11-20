@@ -68,6 +68,8 @@ RecordStorage::RecordStorage(int32_t maxRecordSize, char* fileName, int32_t id_m
 		header->magicNumber = HEADER_MAGIC_NUMBER;
 		header->maxRecordSize = maxRecordSize;
 		header->uploaded = 0;
+		header->id_lsb = id_lsb;
+		header->id_msb = id_msb;
 		writeHeader();
 	}
 }
