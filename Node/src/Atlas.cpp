@@ -201,14 +201,22 @@ double Atlas::getEC(double temperature, int32_t &us, int32_t &ppm, int32_t &sali
 	if (select(EC)) {
 		if (!isnan(temperature)) {
 			enable();
-			sensor_stream->print(temperature, 1);
-			sensor_stream->print(carrage_return);
-			sensor_stream->print(SINGLE_SAMPLE_COMMAND);
-			sensor_stream->print(carrage_return);
-			String result = sensor_stream->readStringUntil(carrage_return);
-			if (!parseEC(result, us, ppm, salinity)) {
-				DEBUG("Error parsing the EC Output: ");
-				DEBUG_LN(result);
+
+			for (int i = 0; i < 5; i++) {
+				delay(100);
+				clean_sensor_port();
+				sensor_stream->print(temperature, 1);
+				sensor_stream->print(carrage_return);
+				sensor_stream->print(SINGLE_SAMPLE_COMMAND);
+				sensor_stream->print(carrage_return);
+				String result = sensor_stream->readStringUntil(carrage_return);
+				if (!parseEC(result, us, ppm, salinity)) {
+					DEBUG("Error parsing the EC Output: ");
+					DEBUG_LN(result);
+					DEBUG("Attempt count: ");
+					DEBUG_LN(i);
+				} else
+					break;
 			}
 			toRet =  0;
 			disable();
