@@ -12,7 +12,9 @@
         <spring.version>3.1.2.RELEASE</spring.version>
         <external.resources>src/main/external</external.resources>
         <web.root>${external.resources}/wqm-war/</web.root>
+        <external.archives>${external.resources}/archives/</external.archives>
         <web.inf>wqm-war/WEB-INF</web.inf>
+        <dist.dir>${project.build.directory}/install</dist.dir>
     </properties>
 
     <dependencies>
@@ -155,6 +157,8 @@
                                 <mkdir dir="${web.root}/css"/>
                                 <mkdir dir="${web.root}/css/images/"/>
                                 <mkdir dir="${web.root}/images/"/>
+                                <mkdir dir="${external.archives}"/>
+                                <mkdir dir="${dist.dir}/native"/>
 
                                 <get src="http://code.jquery.com/jquery-2.0.3.min.js"
                                      dest="${web.root}/js/jquery.js" skipexisting="true"/>
@@ -165,8 +169,8 @@
                                      dest="${web.root}/js/highstock.js" skipexisting="true"/>
 
                                 <get src="http://getbootstrap.com/2.3.2/assets/bootstrap.zip"
-                                     dest="${project.build.directory}/bootstrap.zip" skipexisting="true"/>
-                                <unzip src="${project.build.directory}/bootstrap.zip" dest="${project.build.directory}"
+                                     dest="${external.archives}/bootstrap.zip" skipexisting="true"/>
+                                <unzip src="${external.archives}/bootstrap.zip" dest="${project.build.directory}"
                                        overwrite="false"/>
                                 <copy file="${project.build.directory}/bootstrap/css/bootstrap.min.css"
                                       tofile="${web.root}/css/bootstrap.min.css"/>
@@ -179,6 +183,18 @@
                                 <get src="https://www.atlas-scientific.com/_images/_top_photos/top_logos/do-logo.jpg" dest="${web.root}/images" skipexisting="true"/>
                                 <get src="https://www.atlas-scientific.com/_images/_top_photos/top_logos/ec-logo.jpg" dest="${web.root}/images" skipexisting="true"/>
 -->
+                                <get src="http://rxtx.qbang.org/pub/rxtx/rxtx-2.1-7-bins-r2.zip"
+                                     dest="${external.archives}/rxtx.zip" skipexisting="true"/>
+                                <unzip src="${external.archives}/rxtx.zip" dest="${project.build.directory}"
+                                       overwrite="false"/>
+                                <copy todir="${dist.dir}/native/">
+					<fileset dir="${project.build.directory}/rxtx-2.1-7-bins-r2">	
+						<include name="**/**"/>
+						<exclude name="**/*.jar"/>
+					</fileset>	
+				</copy>
+
+
                             </target>
                         </configuration>
                         <goals>
