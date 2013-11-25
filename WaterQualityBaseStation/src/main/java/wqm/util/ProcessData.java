@@ -77,7 +77,11 @@ public class ProcessData {
         FileInputStream fis = new FileInputStream(new File(toRet.getArgs()[0]));
 
         byte[] _header = new byte[RecordHeader.RECORD_SIZE];
-        fis.read(_header);
+        if(fis.read(_header) != RecordHeader.RECORD_SIZE)
+        {
+            System.err.println("Error reading RecordStore Header.");
+            System.exit(1);
+        }
         RecordHeader header = new RecordHeader(_header);
 
         XBeeAddress64 addr = new XBeeAddress64();
@@ -100,6 +104,10 @@ public class ProcessData {
             prefix = fmt.format(new Date(current - remainder));
             dumpers.get(rec.getClass()).dumpData(outputDir, prefix, rec);
         }
-        System.out.println(count);
+        if(count != -1)
+        {
+            System.err.printf("An error occurred, there was %d unaccounted for bytes at the end of the data.%n", count);
+            System.exit(2);
+        }
     }
 }
