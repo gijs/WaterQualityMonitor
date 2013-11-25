@@ -71,14 +71,17 @@ public class FileSystemDataHandler implements PacketHandler<DataUpload>, DataSou
 
         File outputDir = new File(dataDir, AddressUtil.getCompactStringAddress(xbeeResponse.getRemoteAddress64()));
         outputDir.mkdirs();
-        long currentTime = System.currentTimeMillis();
-        long remainder = currentTime % rotatePeriod;
+        long currentTime, remainder;
+//        long remainder = currentTime % rotatePeriod;
         SimpleDateFormat fmt = new SimpleDateFormat("yyyyy_MMMMM_dd_HH-mm-ss");
-        String prefix = fmt.format(new Date(currentTime - remainder));
+        String prefix;
 
         for (BaseRecord rec : packet.getRecords()) {
             if (dumpers.containsKey(rec.getClass())) {
                 try {
+                    currentTime = rec.getDate().getTime();
+                    remainder = currentTime % rotatePeriod;
+                    prefix = fmt.format(new Date(currentTime - remainder));
                     dumpers.get(rec.getClass()).dumpData(outputDir, prefix, rec);
                 } catch (IOException e) {
                     logger.error("Error writing data:", e);
