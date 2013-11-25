@@ -221,7 +221,7 @@ public class StationManager implements DisposableBean, HttpSessionListener /*, P
 
     public boolean quitCalibrationPhase(HttpSession session, Station station, AtlasSensor sensor) {
         for (Pair<Thread, BaseStation> baseStation : baseStations) {
-            if (baseStation.getB().hasStation(station.getCompactAddress())) {
+            if (baseStation.getB() != null && baseStation.getB().hasStation(station.getCompactAddress())) {
                 boolean toRet = calibrationSessionManager.quitCalibrationPhase(baseStation.getB(), station, sensor);
                 unlock(session, station);
                 return toRet;
