@@ -19,7 +19,7 @@
 
 package wqm.data.csv;
 
-import wqm.radio.RecordStorage.record.SalinityRecord;
+import wqm.data.RecordStorage.record.SalinityRecord;
 
 import java.io.File;
 import java.io.FileOutputStream;

@@ -21,7 +21,7 @@ package wqm.data.csv;
 
 import org.apache.log4j.Logger;
 import wqm.constants.AtlasSensor;
-import wqm.radio.RecordStorage.record.FloatRecord;
+import wqm.data.RecordStorage.record.FloatRecord;
 
 import java.io.File;
 import java.io.FileOutputStream;

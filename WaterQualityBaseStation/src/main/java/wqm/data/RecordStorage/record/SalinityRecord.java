@@ -17,53 +17,58 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.radio.RecordStorage.record;
+package wqm.data.RecordStorage.record;
 
 import wqm.radio.util.Util;
 
 /**
  * Date: 10/22/13
- * Time: 10:22 AM
+ * Time: 2:42 PM
  *
  * @author NigelB
  */
-public class OneWireRecord extends BaseRecord {
-    public static final int RECORD_TYPE = 2;
+public class SalinityRecord extends BaseRecord{
+    public static final int RECORD_TYPE = 3;
 
     public static final int ID_ADDRESS = 1;
-    public static final int TIME_STAMP_ADDRESS = ID_ADDRESS + 8;
-    public static final int VALUE_ADDRESS = TIME_STAMP_ADDRESS + 4;
+    public static final int TIME_STAMP_ADDRESS = 2;
+    public static final int uS_ADDRESS = 6;
+    public static final int PPM_ADDRESS = 10;
+    public static final int SALINITY_ADDRESS = 14;
 
-
-//    int8_t id[8];
-//    time_t time_stamp;
-//    double value;
-
-    int[] id = new int[8];
+    int id;
     long time_stamp;
-    float value;
+    int us, ppm, salinity;
 
-    public OneWireRecord(int[] data) {
+    public SalinityRecord(int[] data) {
         super(data);
-        System.arraycopy(data, ID_ADDRESS, id, 0, id.length);
+        id = data[ID_ADDRESS];
         time_stamp = Util.toUnsignedInt(Util.getInt(data, TIME_STAMP_ADDRESS));
+        us = Util.getInt(data, uS_ADDRESS);
+        ppm = Util.getInt(data, PPM_ADDRESS);
+        salinity = Util.getInt(data, SALINITY_ADDRESS);
+
         date = Util.createDate(time_stamp);
-        value = Util.getIEEE754(data, VALUE_ADDRESS);
-    }
-
-    public double getValue() {
-        return value;
-
     }
 
     @Override
     public String toString() {
-        return String.format("OneWireRecord{ id=%s, timestamp=%d, date=%s, value=%s}", Util.toHexString(id), time_stamp, date, value);
+        return String.format("SalinityRecord{ id=%d, timestamp=%d, date=%s, us=%d, ppm=%d, salinity=%d}", id, time_stamp, date, us, ppm, salinity);
     }
 
-    public int[] getId() {
+    public int getUs() {
+        return us;
+    }
+
+    public int getPpm() {
+        return ppm;
+    }
+
+    public int getSalinity() {
+        return salinity;
+    }
+
+    public int getId() {
         return id;
     }
-
-
 }

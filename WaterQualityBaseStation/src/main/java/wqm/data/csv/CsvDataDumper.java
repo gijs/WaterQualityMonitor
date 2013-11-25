@@ -19,7 +19,7 @@
 
 package wqm.data.csv;
 
-import wqm.radio.RecordStorage.record.BaseRecord;
+import wqm.data.RecordStorage.record.BaseRecord;
 
 import java.io.File;
 import java.io.IOException;

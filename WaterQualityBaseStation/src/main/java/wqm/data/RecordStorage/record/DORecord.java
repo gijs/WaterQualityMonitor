@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package wqm.radio.RecordStorage.record;
+package wqm.data.RecordStorage.record;
 
 /**
  * Date: 11/7/13

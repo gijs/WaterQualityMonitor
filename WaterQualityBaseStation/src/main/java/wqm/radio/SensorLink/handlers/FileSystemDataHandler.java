@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import wqm.PluginManager;
 import wqm.data.csv.CsvDataDumper;
 import wqm.radio.DataSource;
-import wqm.radio.RecordStorage.record.BaseRecord;
+import wqm.data.RecordStorage.record.BaseRecord;
 import wqm.radio.SensorLink.PacketHandlerContext;
 import wqm.radio.SensorLink.packets.DataUpload;
 import wqm.radio.util.AddressUtil;

@@ -19,7 +19,7 @@
 
 package wqm.data.highstock;
 
-import wqm.radio.RecordStorage.record.OneWireRecord;
+import wqm.data.RecordStorage.record.OneWireRecord;
 
 import java.util.*;
 

@@ -19,7 +19,7 @@
 
 package wqm.data.highstock;
 
-import wqm.radio.RecordStorage.record.SalinityRecord;
+import wqm.data.RecordStorage.record.SalinityRecord;
 
 import java.util.*;
 

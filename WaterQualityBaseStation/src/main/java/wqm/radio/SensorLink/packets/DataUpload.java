@@ -20,7 +20,7 @@
 package wqm.radio.SensorLink.packets;
 
 import org.apache.log4j.Logger;
-import wqm.radio.RecordStorage.record.BaseRecord;
+import wqm.data.RecordStorage.record.BaseRecord;
 
 import java.util.ArrayList;
 

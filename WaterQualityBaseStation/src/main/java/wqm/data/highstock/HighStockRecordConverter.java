@@ -19,7 +19,7 @@
 
 package wqm.data.highstock;
 
-import wqm.radio.RecordStorage.record.BaseRecord;
+import wqm.data.RecordStorage.record.BaseRecord;
 
 import java.util.List;
 import java.util.Map;

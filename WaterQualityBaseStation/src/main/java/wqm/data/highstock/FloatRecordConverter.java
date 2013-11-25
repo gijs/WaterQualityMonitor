@@ -20,7 +20,7 @@
 package wqm.data.highstock;
 
 import wqm.constants.AtlasSensor;
-import wqm.radio.RecordStorage.record.FloatRecord;
+import wqm.data.RecordStorage.record.FloatRecord;
 
 import java.util.List;
 import java.util.Map;

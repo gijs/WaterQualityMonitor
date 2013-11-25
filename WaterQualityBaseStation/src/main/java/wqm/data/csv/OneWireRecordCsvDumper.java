@@ -19,7 +19,7 @@
 
 package wqm.data.csv;
 
-import wqm.radio.RecordStorage.record.OneWireRecord;
+import wqm.data.RecordStorage.record.OneWireRecord;
 import wqm.radio.util.Util;
 
 import java.io.File;

@@ -19,8 +19,8 @@
 
 package wqm.data.highstock;
 
-import wqm.radio.RecordStorage.record.BaseRecord;
-import wqm.radio.RecordStorage.record.DORecord;
+import wqm.data.RecordStorage.record.BaseRecord;
+import wqm.data.RecordStorage.record.DORecord;
 
 import java.util.*;
 

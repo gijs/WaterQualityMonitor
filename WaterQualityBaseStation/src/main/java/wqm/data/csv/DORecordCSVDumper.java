@@ -20,7 +20,7 @@
 package wqm.data.csv;
 
 import wqm.constants.AtlasSensor;
-import wqm.radio.RecordStorage.record.DORecord;
+import wqm.data.RecordStorage.record.DORecord;
 
 import java.io.File;
 import java.io.FileOutputStream;
