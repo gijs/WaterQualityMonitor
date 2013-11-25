@@ -20,4 +20,4 @@
 BASE_DIR=$( cd $(dirname $0)/.. ; pwd -P )
 LIB_DIR=$BASE_DIR/libs
 
-java  -cp "$LIB_DIR/*" wqm.Launch "$@"
+exec java -cp "$LIB_DIR/*" wqm.Launch "$@"
