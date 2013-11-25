@@ -47,7 +47,6 @@ import static wqm.radio.util.Util.toIntArray;
 public class ProcessData {
 
     public static void main(String[] args) throws ParseException, IOException {
-
         Option help = OptionBuilder.withLongOpt("help")
                 .withDescription("Display this help message.")
                 .create('h');
@@ -64,7 +63,7 @@ public class ProcessData {
         }
         if (toRet.hasOption('h') || toRet.getArgs().length != 2) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("process <input_file> <output_directory>", options);
+            formatter.printHelp("process_data <input_file> <output_directory>", options);
             System.exit(0);
         }
 
