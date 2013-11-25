@@ -19,6 +19,8 @@
 
 package wqm.radio.util;
 
+import com.rapplogic.xbee.api.XBeeAddress64;
+
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.TimeZone;
@@ -107,6 +109,10 @@ public class Util {
         }
     }
 
+    public static String toHexString(byte[] data) {
+        return toHexString(toIntArray(data));
+    }
+
     public static String toHexString(int[] data) {
         StringBuilder buf = new StringBuilder();
         buf.append("[");
@@ -123,6 +129,15 @@ public class Util {
         }
         buf.append("]");
         return buf.toString();
+    }
+
+    public static int[] toIntArray(byte[] data)
+    {
+        int[] dat = new int[data.length];
+        for (int i = 0; i < data.length; i++) {
+            dat[i] = (data[i] & 0xff);
+        }
+        return dat;
     }
 
     public static String toCompactHexString(int[] data) {
@@ -160,4 +175,13 @@ public class Util {
             data[pos] = _data[count];
         }
     }
+
+    public static XBeeAddress64 createXBeeAddress64(int msb, int lsb)
+    {
+        ByteBuffer buf = ByteBuffer.allocate(16);
+        buf.putInt(msb);
+        buf.putInt(lsb);
+        return new XBeeAddress64(toIntArray(buf.array()));
+    }
+
 }
